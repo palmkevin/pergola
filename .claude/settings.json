@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(chmod +x run.sh)",
+      "Bash(docker build *)",
+      "Bash(python3 -m http.server 8000 --bind 127.0.0.1)"
+    ]
+  }
+}

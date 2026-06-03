@@ -1,0 +1,69 @@
+# =============================================================================
+#  Pergola site definition  —  the ONE source of truth for all drawings.
+#
+#  Edit the numbers below (or just tell Claude Code the measurements and it
+#  will edit them for you), then run ./run.sh to regenerate every view.
+#
+#  Coordinate system (looking down at your garden from above):
+#    x  = left  -> right   (width)
+#    y  = front -> back     (depth, "back" = toward the house if attached)
+#    z  = ground -> sky     (height)
+#  All values are in the unit given by `units` (mm by default).
+#  The sample numbers below are PLACEHOLDERS — replace with your real ones.
+# =============================================================================
+
+units: mm
+
+site:
+  north_deg: 0          # compass bearing of +y, for the North arrow on the plan
+
+pergola:
+  type: attached        # "attached" (against a wall) or "freestanding"
+  origin: [0, 0]        # near-left (min x, min y) corner of the footprint
+  footprint:
+    width: 4000         # x extent
+    depth: 3000         # y extent
+  clear_height: 2400    # top of posts / underside of the beams
+
+  posts:
+    size: 120           # square cross-section (size x size)
+    count_x: 3          # posts along x (>= 2)
+    count_y: 2          # posts along y (>= 2)
+    footing:
+      size: 300         # square concrete footing under each post
+      depth: 600        # how deep below ground
+
+  beams:                # horizontal members sitting on top of the posts
+    width: 120
+    height: 200
+    direction: x        # beams span along x (one per row of posts)
+
+  rafters:              # members laid across the beams
+    width: 60
+    height: 140
+    spacing: 400        # centre-to-centre
+    direction: y        # rafters span along y
+
+  roof:
+    kind: louvered      # "louvered" / "slatted" / "open" (open = no slats)
+    slat:
+      width: 80
+      height: 20
+    spacing: 100        # centre-to-centre between slats
+    direction: x        # slats span along x
+
+surroundings:
+  walls:
+    - name: House wall
+      at: [-500, 3000]  # min corner (x, y) — behind the pergola (it is attached here)
+      size: [5000, 200] # (x, y) footprint of the wall
+      height: 6000
+  buildings:
+    - name: Garden shed
+      at: [5200, 800]
+      size: [2500, 2000]
+      height: 2200
+
+ground:
+  origin: [-1500, -1500]   # min corner of the drawn ground area
+  extent: [10000, 7000]    # (x, y) size of the drawn ground area
