@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 
 from pergola.build import build_elements
 from pergola.model import ConfigError, load_config
-from pergola import views2d, view3d, report, solid
+from pergola import views2d, view3d, report, solid, joinery
 
 
 def main(argv=None) -> int:
@@ -43,12 +43,18 @@ def main(argv=None) -> int:
         ("iso3d",      "Isometric 3D",        view3d.render_iso(elements, cfg)),
     ]
 
+    # Timber-joint detail drawings (flush framing only) — how the members are
+    # cut where they interlock. Derived from the same box model + config.
+    details = joinery.render_joinery(elements, cfg)
+
     # Real 3D solid model (STEP / STL / glTF) from the same box model.
     model_paths = solid.export_model(elements, args.out)
 
     paths = report.write_outputs(views, args.out, os.path.basename(args.config),
-                                 cfg.units, model_paths)
+                                 cfg.units, model_paths, details=details)
     for _, _, fig in views:
+        plt.close(fig)
+    for _, _, fig, _ in details:
         plt.close(fig)
 
     print("Wrote:")
