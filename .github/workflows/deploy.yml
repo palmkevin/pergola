@@ -1,0 +1,60 @@
+name: Build & deploy to Pages
+
+# Reproduces what ./run.sh does locally — build the Docker image, run generate.py
+# to produce output/ — then publishes output/ to GitHub Pages instead of serving it
+# over a local http.server. Keep this in step with run.sh / Dockerfile.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - site.yaml
+      - pergola/**
+      - generate.py
+      - requirements.txt
+      - Dockerfile
+      - .github/workflows/deploy.yml
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Only one Pages deployment at a time; newer pushes supersede in-flight ones.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Build the same python:3.12-slim image used locally (single source of truth
+      # for the apt libs and MPLBACKEND=Agg env in the Dockerfile).
+      - name: Build image
+        run: docker build -t pergola-plan .
+
+      # Mirror run.sh's generate step; uid mapping is unnecessary in CI.
+      - name: Generate outputs
+        run: |
+          docker run --rm -v "$PWD":/work -w /work pergola-plan \
+            python generate.py site.yaml --out output
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: output
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

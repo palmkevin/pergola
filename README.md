@@ -14,7 +14,31 @@ Everything is modelled once as 3D boxes (posts, beams, rafters, slats, footings,
 walls, buildings); every 2D view is an orthographic projection of that single
 model, so all dimensions stay consistent, and the 3D view is essentially free.
 
-## Run it
+## Cloud workflow (GitHub) — the normal way
+
+This project runs entirely in the cloud; no local install needed.
+
+1. **Edit** — change the model through Claude Code on the web (claude.ai/code) connected
+   to this repo, or edit [site.yaml](site.yaml) directly in the GitHub web UI / a PR.
+2. **Push to `main`** — GitHub Actions (`.github/workflows/deploy.yml`) builds the same
+   `python:3.12-slim` image, runs `generate.py`, and publishes `output/` to GitHub Pages.
+   You can also trigger a build manually from the **Actions** tab ("Run workflow").
+3. **View** — the latest plans + interactive 3D model are served at
+   **https://palmkevin.github.io/pergola/** (Pages serves over HTTPS, so the embedded
+   `model.glb` viewer loads correctly).
+
+Generated files live in `output/`:
+
+| file | what |
+|------|------|
+| `output/index.html` | all views on one page + interactive 3D viewer |
+| `output/plan.pdf`   | every view, one per page (print/email) |
+| `output/plan.png`, `elev_front.png`, `elev_side.png`, `iso3d.png` | individual images |
+| `output/model.step`, `model.stl`, `model.glb` | CAD solid / 3D-print mesh / interactive 3D |
+
+`output/` is gitignored — Pages gets it from the build artifact, not from commits.
+
+## Run it locally (optional / offline)
 
 You need Docker (or podman). From this folder:
 
@@ -23,14 +47,8 @@ You need Docker (or podman). From this folder:
 ./run.sh other.yaml     # use a different config
 ```
 
-First run builds a small `python:3.12-slim` image; later runs reuse it.
-Outputs land in `output/`:
-
-| file | what |
-|------|------|
-| `output/index.html` | open in a browser — all views on one page |
-| `output/plan.pdf`   | every view, one per page (print/email) |
-| `output/plan.png`, `elev_front.png`, `elev_side.png`, `iso3d.png` | individual images |
+First run builds the image; later runs reuse it. `run.sh` then serves `output/` at
+**http://localhost:8000/** (the local stand-in for the Pages URL above).
 
 ### Without Docker
 

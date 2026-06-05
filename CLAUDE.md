@@ -26,6 +26,16 @@ feature, add it to the box model first; every output follows.
 
 ## How to run
 
+**Canonical (cloud):** push to `main` → GitHub Actions (`.github/workflows/deploy.yml`) builds
+the image, runs `generate.py`, and publishes `output/` to GitHub Pages at
+**https://palmkevin.github.io/pergola/**. The workflow reproduces `run.sh` step-for-step, so
+**keep it in step with `run.sh` / `Dockerfile`** (it triggers on changes to `site.yaml`,
+`pergola/**`, `generate.py`, `requirements.txt`, `Dockerfile`, and the workflow itself; a manual
+"Run workflow" button also exists). Pages serves over HTTPS, so the embedded `<model-viewer>`
+3D loads — that's the cloud replacement for the old local `http.server`.
+
+**Local (optional / offline):**
+
 ```bash
 ./run.sh                # build image (first time) + generate from site.yaml
 ./run.sh other.yaml     # use a different config
@@ -37,10 +47,11 @@ Runs inside a `python:3.12-slim` Docker container (the host Python is 3.9; do no
 and the 3D model `output/model.{step,stl,glb}`.
 
 After generating, `run.sh` serves `output/` over HTTP at **http://localhost:8000/** (a
-backgrounded host `python3 -m http.server`, started only if the port is not already answering).
-View there, not by opening the file directly — browsers block the `model.glb` fetch under a
-`file://` URL, so the embedded `<model-viewer>` 3D only loads over HTTP. The server streams the
-live directory, so the URL keeps showing the latest output after every regeneration (no restart).
+backgrounded host `python3 -m http.server`, started only if the port is not already answering) —
+the local stand-in for the Pages URL. View there, not by opening the file directly — browsers
+block the `model.glb` fetch under a `file://` URL, so the embedded `<model-viewer>` 3D only loads
+over HTTP. The server streams the live directory, so the URL keeps showing the latest output after
+every regeneration (no restart).
 
 Always **rebuild the image after editing `requirements.txt` or the `Dockerfile`**
 (`docker build -t pergola-plan .`); code changes need no rebuild (the project is mounted).
