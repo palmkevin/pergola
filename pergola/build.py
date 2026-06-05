@@ -138,9 +138,19 @@ def build_pergola(pg: Pergola) -> List[Box]:
     rh = rf.height
     rb = (bh - rh) if flush else bh    # rafter underside, measured above the post top
     if rf.direction == "y":
-        a, b = (xs[0] + bm.width / 2, xs[-1] - bm.width / 2) if flush else (ox, ox + w)
-        n = _count_by_spacing((b - a) - rf.width, rf.spacing)
-        for cx in _linspace_centers(a + rf.width / 2, (b - a) - rf.width, n):
+        if flush:
+            # The two side beams of the perimeter ring already carry the roof's
+            # left/right edges, so they act as the outer supports. The rafters
+            # are therefore spread evenly across the OPEN bay between the side
+            # beams with equal gaps — none doubled up against a side beam.
+            lo = xs[0] + bm.width / 2      # inner face of the left side beam
+            hi = xs[-1] - bm.width / 2     # inner face of the right side beam
+            n = max(1, int(round((hi - lo) / rf.spacing)) - 1)   # interior rafters
+            centers = lo + (hi - lo) * np.arange(1, n + 1) / (n + 1)
+        else:
+            n = _count_by_spacing(w - rf.width, rf.spacing)
+            centers = _linspace_centers(ox + rf.width / 2, w - rf.width, n)
+        for cx in centers:
             boxes.append(_slab(cx - rf.width / 2, cx + rf.width / 2, oy, oy + d,
                                underside(oy) + rb, underside(oy + d) + rb,
                                rh, "rafter"))
