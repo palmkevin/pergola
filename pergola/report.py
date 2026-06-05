@@ -7,6 +7,7 @@ Produces, in the output directory:
 """
 from __future__ import annotations
 
+import hashlib
 import os
 from typing import List, Tuple
 
@@ -107,36 +108,59 @@ The STEP file opens in any CAD package; the GLB/STL open in 3D viewers and slice
 )
 
 
+def _versioned(path: str) -> str:
+    """Return ``<basename>?v=<8-hex content hash>`` for cache-busting.
+
+    The deployed asset filenames never change (``model.glb``, ``plan.png`` …)
+    and GitHub Pages serves them with ``Cache-Control: max-age``, so a browser
+    (and especially ``<model-viewer>``, which fetches the GLB and caches it by
+    URL) keeps serving the stale bytes after a redeploy — the 3D model appears
+    "not updated" even though Pages has the new file. Appending a hash of the
+    file's contents makes the URL change exactly when the bytes change, forcing
+    a refetch only when there's something new to fetch."""
+    name = os.path.basename(path)
+    with open(path, "rb") as fh:
+        digest = hashlib.md5(fh.read()).hexdigest()[:8]
+    return f"{name}?v={digest}"
+
+
 def write_outputs(views: List[Tuple[str, str, "Figure"]], outdir: str,
                   config_name: str, units: str, model_paths: dict | None = None) -> dict:
     """``views`` = list of (key, title, figure). ``model_paths`` = optional dict
     of 3D-model files ({step, stl, glb}) to embed/link in the HTML. Returns paths."""
     os.makedirs(outdir, exist_ok=True)
-    png_entries = []  # (title, filename)
+    png_entries = []  # (title, versioned URL)
+    png_paths = []    # full paths, for the returned dict
     pdf_path = os.path.join(outdir, "plan.pdf")
 
     with PdfPages(pdf_path) as pdf:
         for key, title, fig in views:
             png_name = f"{key}.png"
-            fig.savefig(os.path.join(outdir, png_name), dpi=fig.get_dpi(),
+            png_path = os.path.join(outdir, png_name)
+            fig.savefig(png_path, dpi=fig.get_dpi(),
                         bbox_inches="tight", facecolor="white")
             pdf.savefig(fig, facecolor="white")
-            png_entries.append((title, png_name))
+            png_entries.append((title, png_path))
+            png_paths.append(png_path)
+
+    # Cache-bust every generated asset by content hash so a redeploy is picked
+    # up immediately (see _versioned). Done after the files exist on disk.
+    png_entries = [(title, _versioned(p)) for title, p in png_entries]
 
     model_paths = model_paths or {}
-    glb_name = os.path.basename(model_paths["glb"]) if model_paths.get("glb") else None
+    glb_name = _versioned(model_paths["glb"]) if model_paths.get("glb") else None
     _dl_labels = {"step": "STEP (CAD)", "stl": "STL (print)", "glb": "GLB (3D)"}
-    downloads = [(_dl_labels[k], os.path.basename(model_paths[k]))
+    downloads = [(_dl_labels[k], _versioned(model_paths[k]))
                  for k in ("step", "stl", "glb") if model_paths.get(k)]
 
     html_path = os.path.join(outdir, "index.html")
     with open(html_path, "w", encoding="utf-8") as fh:
         fh.write(_HTML.render(views=png_entries, config_name=config_name,
-                              units=units, pdf_name="plan.pdf",
+                              units=units, pdf_name=_versioned(pdf_path),
                               model_glb=glb_name, downloads=downloads))
 
     return {
         "pdf": pdf_path,
         "html": html_path,
-        "pngs": [os.path.join(outdir, n) for _, n in png_entries],
+        "pngs": png_paths,
     }
