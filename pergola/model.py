@@ -293,8 +293,11 @@ def _axis(value, ctx: str) -> str:
     return v
 
 
+_DE_NAMES = {"wall": "Wand", "building": "Gebäude", "bed": "Beet"}
+
+
 def _block(item, P, L, kind: str) -> Block:
-    name = str(item.get("name", kind.title()))
+    name = str(item.get("name", _DE_NAMES.get(kind, kind.title())))
     return Block(
         name=name,
         at=P(_require(item, "at", f"{kind} '{name}'"), f"{kind}.at"),
@@ -304,7 +307,7 @@ def _block(item, P, L, kind: str) -> Block:
 
 
 def _path(item, P, L) -> Path:
-    name = str(item.get("name", "Path"))
+    name = str(item.get("name", "Pfad"))
     high = str(item.get("high_end", "x_min")).lower()
     if high not in ("x_min", "x_max", "y_min", "y_max"):
         raise ConfigError(
