@@ -76,7 +76,7 @@ surroundings:
     # (~2.8 m to the eave). CONFIRM with a real measurement: the building's eave
     # height vs the pergola roof top (~2750 mm at the house side) decides whether the
     # pergola tucks under the eave or needs to be lowered.
-    - name: House wall
+    - name: Hauswand
       at: [-500, 3000]  # min corner (x, y) — behind the pergola (it is attached here)
       size: [5000, 200] # (x, y) footprint of the wall
       height: 2800      # provisional single-storey eave height (was 6000 placeholder)
@@ -86,7 +86,7 @@ surroundings:
   # tapering to ground level at the pergola's left edge. 80 cm wide, its back
   # edge 125 cm clear of the house wall (room for the 125 cm house-side bed).
   paths:
-    - name: Path
+    - name: Pfad
       at: [-1500, 950]
       size: [1500, 800]   # (x length, y width = 80 cm)
       rise: 1000          # 1 m high at the high_end edge, 0 at the other
@@ -95,11 +95,11 @@ surroundings:
   # Raised beds (30 cm) flanking the path, one on each side, over its length.
   # Each 125 cm wide; the house-side bed runs right up to the house wall.
   beds:
-    - name: Bed
+    - name: Beet
       at: [-1500, -300]   # front side of the path (y -0.30 .. 0.95 m)
       size: [1500, 1250]
       height: 300
-    - name: Bed
+    - name: Beet
       at: [-1500, 1750]   # house side of the path (y 1.75 .. 3.00 m, against the wall)
       size: [1500, 1250]
       height: 300
