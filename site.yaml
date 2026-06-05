@@ -92,17 +92,17 @@ surroundings:
       rise: 1000          # 1 m high at the high_end edge, 0 at the other
       high_end: x_min     # high on the far-left edge
 
-  # Raised beds (30 cm) flanking the path, one on each side, over its length.
+  # Raised beds (60 cm) flanking the path, one on each side, over its length.
   # Each 125 cm wide; the house-side bed runs right up to the house wall.
   beds:
     - name: Bed
       at: [-1500, -300]   # front side of the path (y -0.30 .. 0.95 m)
       size: [1500, 1250]
-      height: 300
+      height: 600
     - name: Bed
       at: [-1500, 1750]   # house side of the path (y 1.75 .. 3.00 m, against the wall)
       size: [1500, 1250]
-      height: 300
+      height: 600
 
 ground:
   origin: [-1800, -1200]   # min corner of the drawn ground area
