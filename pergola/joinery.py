@@ -30,7 +30,7 @@ from typing import List, Tuple
 import matplotlib
 matplotlib.use("Agg")  # headless
 import matplotlib.pyplot as plt
-from matplotlib.patches import Rectangle, FancyArrow
+from matplotlib.patches import Rectangle, Polygon
 import matplotlib.patches as mpatches
 import numpy as np
 
@@ -44,29 +44,6 @@ DPI = 150
 # Joint colours, reused from the element palette so details match the views.
 _BEAM = style.CATEGORY_STYLE["beam"]
 _RAF = style.CATEGORY_STYLE["rafter"]
-_CUT = {"facecolor": "white", "edgecolor": "#555", "hatch": "////", "linewidth": 0.8}
-_DIM = style.DIM_COLOR
-
-
-# --------------------------------------------------------------------------- #
-#  Small dimension helpers (mm coords, tuned to the detail scale)
-# --------------------------------------------------------------------------- #
-def _dh(ax, x1, x2, y, text, tick):
-    ax.annotate("", (x1, y), (x2, y), arrowprops=dict(arrowstyle="<->", color=_DIM, lw=0.9))
-    for x in (x1, x2):
-        ax.plot([x, x], [y - tick, y + tick], color=_DIM, lw=0.7)
-    ax.text((x1 + x2) / 2, y + tick * 1.4, text, ha="center", va="bottom",
-            fontsize=style.DIM_FONTSIZE, color=_DIM)
-
-
-def _dv(ax, y1, y2, x, text, tick, side="right"):
-    ax.annotate("", (x, y1), (x, y2), arrowprops=dict(arrowstyle="<->", color=_DIM, lw=0.9))
-    for y in (y1, y2):
-        ax.plot([x - tick, x + tick], [y, y], color=_DIM, lw=0.7)
-    dx = tick * 1.4 if side == "right" else -tick * 1.4
-    ha = "left" if side == "right" else "right"
-    ax.text(x + dx, (y1 + y2) / 2, text, ha=ha, va="center", rotation=90,
-            fontsize=style.DIM_FONTSIZE, color=_DIM)
 
 
 def _panel(ax, title):
@@ -77,6 +54,57 @@ def _panel(ax, title):
 
 def _fmt(v: float) -> str:
     return f"{round(v):d}"
+
+
+# --------------------------------------------------------------------------- #
+#  Tiny isometric helper — the joints are inherently 3D (two perpendicular
+#  members, and *which face* gets notched), so the details are drawn as simple
+#  axonometric boxes rather than orthographic sections (which a layperson
+#  cannot mentally re-assemble). x -> right, z -> up, y (depth) -> up-right.
+# --------------------------------------------------------------------------- #
+_ISO_A = math.radians(27.0)
+_ISO_DS = 0.62                      # depth compression along y
+
+
+def _iso(x, y, z):
+    return (x + math.cos(_ISO_A) * _ISO_DS * y, z + math.sin(_ISO_A) * _ISO_DS * y)
+
+
+def _shade(hex_color: str, f: float) -> str:
+    h = hex_color.lstrip("#")
+    r, g, b = (int(h[i:i + 2], 16) for i in (0, 2, 4))
+    return "#%02x%02x%02x" % tuple(max(0, min(255, int(c * f))) for c in (r, g, b))
+
+
+def _box3d(ax, x0, x1, y0, y1, z0, z1, face, edge, z=2.0, alpha=1.0):
+    """Draw the three visible faces (top, front, right) of an axis-aligned box."""
+    top = [_iso(x0, y0, z1), _iso(x1, y0, z1), _iso(x1, y1, z1), _iso(x0, y1, z1)]
+    front = [_iso(x0, y0, z0), _iso(x1, y0, z0), _iso(x1, y0, z1), _iso(x0, y0, z1)]
+    right = [_iso(x1, y0, z0), _iso(x1, y1, z0), _iso(x1, y1, z1), _iso(x1, y0, z1)]
+    for poly, fc, zi in ((top, face, z + 0.2), (front, _shade(face, 0.85), z + 0.1),
+                         (right, _shade(face, 0.70), z)):
+        ax.add_patch(Polygon(poly, closed=True, facecolor=fc, edgecolor=edge,
+                             lw=1.0, alpha=alpha, zorder=zi, joinstyle="round"))
+
+
+def _ghost3d(ax, x0, x1, y0, y1, z0, z1, color="#c0392b", z=6.0):
+    """Dashed wireframe of a box — the chunk that gets sawn out."""
+    c = [(x0, y0, z0), (x1, y0, z0), (x1, y1, z0), (x0, y1, z0),
+         (x0, y0, z1), (x1, y0, z1), (x1, y1, z1), (x0, y1, z1)]
+    edges = [(0, 1), (1, 2), (2, 3), (3, 0), (4, 5), (5, 6), (6, 7), (7, 4),
+             (0, 4), (1, 5), (2, 6), (3, 7)]
+    for a, b in edges:
+        pa, pb = _iso(*c[a]), _iso(*c[b])
+        ax.plot([pa[0], pb[0]], [pa[1], pb[1]], color=color, lw=1.1,
+                ls=(0, (3, 2)), zorder=z)
+
+
+def _iso_arrow(ax, x, y, z0, z1, text):
+    """A vertical drop arrow in iso space, with a label."""
+    p0, p1 = _iso(x, y, z0), _iso(x, y, z1)
+    ax.annotate("", p1, p0, arrowprops=dict(arrowstyle="-|>", color="#222", lw=2.2))
+    pm = _iso(x, y, (z0 + z1) / 2)
+    ax.text(pm[0] + 6, pm[1], text, fontsize=8, ha="left", va="center")
 
 
 # --------------------------------------------------------------------------- #
@@ -91,61 +119,64 @@ def _render_kaemmung(cfg: Config):
     db = round(rh / 2.0)       # channel depth into the beam top
     dr = rh - db               # channel depth into the rafter underside
     bear = bh - db             # bearing plane, above the beam underside
-    tick = max(bw, bh) * 0.05
 
-    fig, axs = plt.subplots(1, 3, figsize=(12.0, 5.0), dpi=DPI)
+    fig, axs = plt.subplots(1, 2, figsize=(12.0, 6.2), dpi=DPI)
     fig.suptitle("Holzverbindung 1 — Kreuzüberblattung (Kämmung): Sparren kreuzt Ringbalken",
                  fontsize=style.TITLE_FONTSIZE, fontweight="bold", x=0.04, ha="left")
-    fig.text(0.04, 0.9, f"Oberkanten bündig · Sparren {_fmt(rw)}×{_fmt(rh)} · "
-             f"Balken {_fmt(bw)}×{_fmt(bh)} · Dachneigung {_fmt(tilt)}°    ·    Maße in "
-             f"{cfg.units}", fontsize=style.LABEL_FONTSIZE, color="#555", ha="left")
+    fig.text(0.04, 0.92, f"Sparren {_fmt(rw)}×{_fmt(rh)} läuft quer ÜBER den Balken "
+             f"{_fmt(bw)}×{_fmt(bh)}; beide werden eingeschnitten, Oberkanten bündig (eine "
+             f"Dachebene) · Dachneigung {_fmt(tilt)}° · Maße in {cfg.units}",
+             fontsize=style.LABEL_FONTSIZE, color="#555", ha="left")
 
-    # ---- Panel 1: beam end-on (bw x bh) with a channel in its TOP edge ------
+    Lb = bw * 4.0                  # beam length shown (runs in x)
+    Ry0, Ry1 = -bw * 1.1, bw + bw * 1.1   # rafter run in y (overhangs both sides)
+    rx0, rx1 = (Lb - rw) / 2, (Lb + rw) / 2  # rafter x-band, centred on the beam
+    nx0, nx1 = rx0, rx1            # beam top notch footprint in x (= rafter width)
+
+    # ---- Panel 1: exploded — saw these chunks out --------------------------
     ax = axs[0]
-    _panel(ax, f"1) Ringbalken {_fmt(bw)}×{_fmt(bh)}\nKanal in OBERKANTE: {_fmt(rw)} breit × {_fmt(db)} tief")
-    ax.add_patch(Rectangle((0, 0), bw, bh, facecolor=_BEAM["face"], edgecolor=_BEAM["edge"], lw=1.4))
-    ax.add_patch(Rectangle(((bw - rw) / 2, bh - db), rw, db, **_CUT))
-    _dh(ax, (bw - rw) / 2, (bw + rw) / 2, bh + tick * 2, f"{_fmt(rw)}", tick)
-    _dv(ax, bh - db, bh, bw + tick * 2, f"{_fmt(db)}", tick)
-    _dv(ax, 0, bh, -tick * 2, f"{_fmt(bh)}", tick, side="left")
-    ax.text(bw / 2, (bh - db) / 2, "Balken\nbleibt", ha="center", va="center", fontsize=8)
-    ax.set_xlim(-bw * 0.9, bw * 1.7); ax.set_ylim(-bh * 0.12, bh * 1.2)
+    _panel(ax, "1) Was wird ausgesägt? (auseinandergezogen)")
+    # Beam, with the red ghost chunk removed from its TOP (rw wide × bw deep × db).
+    _box3d(ax, 0, Lb, 0, bw, 0, bh, _BEAM["face"], _BEAM["edge"], z=2)
+    _ghost3d(ax, nx0, nx1, 0, bw, bh - db, bh)
+    pc = _iso((nx0 + nx1) / 2, bw, bh)
+    ax.annotate(f"Balken: oben {_fmt(rw)}×{_fmt(bw)} ×\nTiefe {_fmt(db)} heraus",
+                pc, (pc[0] + bw * 0.4, pc[1] + bh * 0.5), fontsize=7.5, color="#c0392b",
+                arrowprops=dict(arrowstyle="->", color="#c0392b"))
+    # Rafter, lifted above, with the ghost chunk removed from its UNDERSIDE.
+    gap = bh * 1.7
+    rz0, rz1 = bh + gap, bh + gap + rh
+    _box3d(ax, rx0, rx1, Ry0, Ry1, rz0, rz1, _RAF["face"], _RAF["edge"], z=4)
+    _ghost3d(ax, rx0, rx1, 0, bw, rz0, rz0 + dr)
+    pr = _iso(rx0, bw, rz0)
+    ax.annotate(f"Sparren: unten {_fmt(rw)}×{_fmt(bw)}\n× Tiefe {_fmt(dr)} heraus",
+                pr, (pr[0] - bw * 1.5, pr[1] - bh * 0.1), fontsize=7.5, color="#c0392b",
+                ha="right", arrowprops=dict(arrowstyle="->", color="#c0392b"))
+    _iso_arrow(ax, (rx0 + rx1) / 2, bw * 0.5, rz0 - bh * 0.2, bh + bh * 0.25, "einsetzen")
+    ax.set_xlim(-bw * 3.4, Lb + bw * 1.4); ax.set_ylim(-bh * 0.5, rz1 + bh * 0.7)
 
-    # ---- Panel 2: rafter along its run, channel in its UNDERSIDE ------------
+    # ---- Panel 2: assembled — tops flush -----------------------------------
     ax = axs[1]
-    Lr = bw * 2.2
-    _panel(ax, f"2) Sparren {_fmt(rw)}×{_fmt(rh)}\nKanal in UNTERKANTE: {_fmt(bw)} breit × {_fmt(dr)} tief")
-    ax.add_patch(Rectangle((0, 0), Lr, rh, facecolor=_RAF["face"], edgecolor=_RAF["edge"], lw=1.4))
-    ax.add_patch(Rectangle(((Lr - bw) / 2, 0), bw, dr, **_CUT))
-    _dh(ax, (Lr - bw) / 2, (Lr + bw) / 2, -tick * 2.4, f"{_fmt(bw)}", tick)
-    _dv(ax, 0, rh, -tick * 2, f"{_fmt(rh)}", tick, side="left")
-    _dv(ax, 0, dr, Lr + tick * 2, f"{_fmt(dr)}", tick)
-    ax.text(Lr / 2, (dr + rh) / 2, "Sparren bleibt", ha="center", va="center", fontsize=8)
-    ax.set_xlim(-Lr * 0.18, Lr * 1.2); ax.set_ylim(-rh * 0.9, rh * 1.25)
-
-    # ---- Panel 3: assembled section, tops flush ----------------------------
-    ax = axs[2]
-    _panel(ax, "3) Zusammengesetzt — Oberkanten BÜNDIG\nSparren fällt von oben ein")
-    ax.add_patch(Rectangle((0, 0), bw, bh, facecolor=_BEAM["face"], edgecolor=_BEAM["edge"], lw=1.4))
-    # the rafter now fills the beam's top channel (width rw, bear..bh)
-    ax.add_patch(Rectangle(((bw - rw) / 2, bear), rw, bh - bear,
-                           facecolor=_RAF["face"], edgecolor=_RAF["edge"], lw=1.2))
-    ax.plot([0, bw], [bear, bear], color=_RAF["edge"], lw=1.6)
-    ax.text(bw / 2, (bear + bh) / 2, "Sparren", ha="center", va="center", fontsize=7.5,
-            color=_RAF["edge"], fontweight="bold")
-    ax.text(bw / 2, bear / 2, "Balken", ha="center", va="center", fontsize=7.5,
-            color=_BEAM["edge"], fontweight="bold")
-    ax.add_patch(FancyArrow(bw / 2, bh * 1.45, 0, -bh * 0.28, width=bw * 0.03,
-                            head_width=bw * 0.13, head_length=bh * 0.1, color="black"))
-    ax.text(bw / 2, bh * 1.5, "einsetzen", ha="center", fontsize=8)
-    ax.annotate(f"Auflagerfläche (waagerecht)\nz = +{_fmt(bear)}", (0, bear),
-                (-bw * 1.05, bear * 0.55), fontsize=7,
-                arrowprops=dict(arrowstyle="->", color="#444"))
-    ax.annotate("Oberkanten bündig\n= eine Dachebene", (bw / 2, bh),
-                (bw * 1.1, bh * 1.12), fontsize=7,
-                arrowprops=dict(arrowstyle="->", color="#444"))
-    _dv(ax, bear, bh, bw + tick * 2, f"{_fmt(bh - bear)}", tick)
-    ax.set_xlim(-bw * 1.6, bw * 2.1); ax.set_ylim(-bh * 0.12, bh * 1.65)
+    _panel(ax, "2) Zusammengesteckt — Oberkanten bündig (= eine Dachebene)")
+    # Draw back -> front so the rafter sits visibly IN the beam's top channel.
+    # Overhangs are the full rafter depth (rh, underside at bh-rh); only where it
+    # crosses the beam is the bottom dr notched away, leaving it from `bear` up.
+    _box3d(ax, rx0, rx1, bw, Ry1, bh - rh, bh, _RAF["face"], _RAF["edge"], z=3)       # back overhang
+    _box3d(ax, 0, Lb, 0, bw, 0, bh, _BEAM["face"], _BEAM["edge"], z=4)                # beam
+    _box3d(ax, rx0, rx1, 0, bw, bear, bh, _RAF["face"], _RAF["edge"], z=6)            # crossing (in channel)
+    _box3d(ax, rx0, rx1, Ry0, 0, bh - rh, bh, _RAF["face"], _RAF["edge"], z=8)        # front overhang
+    # tops-flush line across the top
+    fa, fb = _iso(0, 0, bh), _iso(Lb, 0, bh)
+    ax.plot([fa[0], fb[0]], [fa[1], fb[1]], color="#1e8449", lw=1.6, zorder=10)
+    ax.annotate("Oberkanten bündig", _iso(Lb * 0.5, 0, bh),
+                (_iso(Lb, 0, bh)[0] + bw * 0.2, _iso(Lb, 0, bh)[1] + bh * 0.6),
+                fontsize=8, color="#1e8449", arrowprops=dict(arrowstyle="->", color="#1e8449"))
+    # the bearing shoulder: the rafter rests on the channel floor at z = bear
+    s0 = _iso(rx0, 0, bear)
+    ax.annotate(f"Sparren liegt auf dem\nKanalboden auf (z = {_fmt(bear)})",
+                s0, (s0[0] - bw * 2.6, s0[1] + bh * 1.7), ha="center",
+                fontsize=7.5, color="#444", arrowprops=dict(arrowstyle="->", color="#444"))
+    ax.set_xlim(-bw * 3.4, Lb + bw * 1.6); ax.set_ylim(-bh * 0.5, bh + bw + bh * 0.9)
 
     fig.tight_layout(rect=[0, 0, 1, 0.9])
     return fig
@@ -157,58 +188,71 @@ def _render_kaemmung(cfg: Config):
 def _render_corner(cfg: Config):
     pg = cfg.pergola
     bw, bh = pg.beams.width, pg.beams.height
-    psx, psy = pg.posts.size_x, pg.posts.size_y
     hh = bh / 2.0              # each beam halved in height over the lap
-    tick = max(bw, bh) * 0.05
 
-    fig, axs = plt.subplots(1, 2, figsize=(11.0, 5.8), dpi=DPI)
+    fig, axs = plt.subplots(1, 2, figsize=(12.0, 6.2), dpi=DPI)
     fig.suptitle("Holzverbindung 2 — Eck-Überblattung: zwei Ringbalken treffen über dem Pfosten",
                  fontsize=style.TITLE_FONTSIZE, fontweight="bold", x=0.04, ha="left")
-    fig.text(0.04, 0.9, f"beide Balken {_fmt(bw)}×{_fmt(bh)}, je auf halber Höhe "
-             f"({_fmt(hh)}) ausgeklinkt    ·    Maße in {cfg.units}",
-             fontsize=style.LABEL_FONTSIZE, color="#555", ha="left")
+    fig.text(0.04, 0.92, f"Beide Balken {_fmt(bw)}×{_fmt(bh)}, im Überlappungsquadrat "
+             f"({_fmt(bw)}×{_fmt(bw)}) je auf halbe Höhe ({_fmt(hh)}) ausgeklinkt → "
+             f"{_fmt(hh)} + {_fmt(hh)} = {_fmt(bh)} (Höhe EINES Balkens, nicht zwei) · "
+             f"Maße in {cfg.units}", fontsize=style.LABEL_FONTSIZE, color="#555", ha="left")
 
-    # ---- Panel 1: the two beams exploded (elevation), each half-lapped -----
+    arm = bw * 2.6                 # arm length each side of the corner
+    lo, hi = arm, arm + bw         # the bw×bw overlap square sits at [lo, hi]²
+    POST = style.CATEGORY_STYLE["post"]
+    # Both members are beams; tint B a lighter beam shade (NOT the rafter colour)
+    # just to tell the two ring beams apart.
+    B_FACE = _shade(_BEAM["face"], 1.18)
+
+    # ---- Panel 1: exploded — each beam loses HALF its height at the lap -----
     ax = axs[0]
-    _panel(ax, "1) Beide Balken ausgeklinkt (je halbe Höhe)")
-    LA = bw * 3.0
-    # Beam A (front/back, runs in x): full section, TOP half removed over the lap (right end).
-    ax.add_patch(Rectangle((0, 0), LA, bh, facecolor=_BEAM["face"], edgecolor=_BEAM["edge"], lw=1.4))
-    ax.add_patch(Rectangle((LA - bw, hh), bw, hh, **_CUT))            # removed top half at lap
-    ax.text(LA * 0.45, bh / 2, "Balken A (in x)\nOberseite weg", ha="center", va="center", fontsize=7.5)
-    # Beam B (side, runs in y): drawn offset upward; full section, BOTTOM half removed at the lap.
-    yb = bh * 1.6
-    ax.add_patch(Rectangle((0, yb), LA, bh, facecolor=_RAF["face"], edgecolor=_RAF["edge"], lw=1.4))
-    ax.add_patch(Rectangle((LA - bw, yb), bw, hh, **_CUT))           # removed bottom half at lap
-    ax.text(LA * 0.45, yb + bh / 2, "Balken B (in y)\nUnterseite weg", ha="center", va="center", fontsize=7.5)
-    _dv(ax, 0, bh, -tick * 2, f"{_fmt(bh)}", tick, side="left")
-    _dh(ax, LA - bw, LA, -tick * 2.6, f"{_fmt(bw)} (Überblattung)", tick)
-    ax.set_xlim(-bw * 1.1, LA + bw * 0.3); ax.set_ylim(-bh * 0.45, yb + bh * 1.1)
+    _panel(ax, "1) Was wird ausgesägt? (je halbe Höhe im Eck-Quadrat)")
+    # Beam A runs in x (its bar lies along y = [lo, hi]); ghost removes its TOP half.
+    _box3d(ax, 0, hi, lo, hi, 0, bh, _BEAM["face"], _BEAM["edge"], z=2)
+    _ghost3d(ax, lo, hi, lo, hi, hh, bh)
+    pa = _iso(hi, (lo + hi) / 2, bh)
+    ax.annotate("Balken A:\nOberseite weg", pa,
+                (pa[0] + bw * 0.5, pa[1] - bh * 0.9), fontsize=7.5, color="#c0392b",
+                ha="left", arrowprops=dict(arrowstyle="->", color="#c0392b"))
+    # Beam B runs in y (bar along x = [lo, hi]); lifted up, ghost removes its BOTTOM half.
+    gap = bh * 1.9
+    bz0 = bh + gap
+    _box3d(ax, lo, hi, 0, hi, bz0, bz0 + bh, B_FACE, _BEAM["edge"], z=4)
+    _ghost3d(ax, lo, hi, lo, hi, bz0, bz0 + hh)
+    pb = _iso(lo, lo, bz0)
+    ax.annotate("Balken B:\nUnterseite weg", pb,
+                (pb[0] - bw * 2.2, pb[1] + bh * 0.15), fontsize=7.5, color="#c0392b",
+                ha="right", arrowprops=dict(arrowstyle="->", color="#c0392b"))
+    _iso_arrow(ax, (lo + hi) / 2, (lo + hi) / 2, bz0 - bh * 0.2, bh + bh * 0.25, "absenken")
+    ax.set_xlim(-bw * 3.4, hi + bw * 3.4); ax.set_ylim(-bh * 0.5, bz0 + bh * 1.4)
 
-    # ---- Panel 2: assembled on the post ------------------------------------
+    # ---- Panel 2: assembled on the post — corner is ONE beam high ----------
     ax = axs[1]
-    _panel(ax, "2) Zusammengelegt, auf den Pfosten verdübelt")
-    post_top = 0.0
-    # post
-    ax.add_patch(Rectangle((-psx / 2, post_top - bh * 1.3), psx, bh * 1.3,
-                           facecolor=style.CATEGORY_STYLE["post"]["face"],
-                           edgecolor=style.CATEGORY_STYLE["post"]["edge"], lw=1.4))
-    # beam A bottom half + beam B top half = full height bh
-    ax.add_patch(Rectangle((-bw * 1.6, post_top), bw * 3.2, hh, facecolor=_BEAM["face"],
-                           edgecolor=_BEAM["edge"], lw=1.4))
-    ax.add_patch(Rectangle((-bw / 2, post_top + hh), bw, hh, facecolor=_RAF["face"],
-                           edgecolor=_RAF["edge"], lw=1.4))
-    ax.plot([-bw / 2, bw / 2], [hh, hh], color="#333", lw=1.0, ls=(0, (4, 3)))
-    ax.text(bw * 1.2, hh / 2, "Balken A", fontsize=7.5, color=_BEAM["edge"], va="center")
-    ax.text(0, hh + hh / 2, "Balken B", fontsize=7.5, color=_RAF["edge"], ha="center", va="center")
-    ax.text(0, post_top - bh * 0.7, "Pfosten", fontsize=7.5,
-            color=style.CATEGORY_STYLE["post"]["edge"], ha="center", va="center")
-    # dowel pin through the lap
-    ax.plot([0, 0], [post_top - bh * 0.15, bh], color="#5c3d23", lw=2.4)
-    ax.annotate("Holzdübel / Schraube\nvon oben durch beide Lagen", (0, bh),
-                (bw * 1.0, bh * 1.25), fontsize=7, arrowprops=dict(arrowstyle="->", color="#444"))
-    _dv(ax, post_top, bh, bw * 1.75, f"{_fmt(bh)}", tick)
-    ax.set_xlim(-bw * 2.1, bw * 3.0); ax.set_ylim(post_top - bh * 1.45, bh * 1.5)
+    _panel(ax, f"2) Zusammengelegt: Eck-Höhe = {_fmt(bh)} (= ein Balken), auf dem Pfosten")
+    # post under the overlap square
+    _box3d(ax, lo + 8, hi - 8, lo + 8, hi - 8, -bh * 1.4, 0, POST["face"], POST["edge"], z=1)
+    # back arm: beam A (in x) at full height, behind the corner
+    _box3d(ax, 0, lo, lo, hi, 0, bh, _BEAM["face"], _BEAM["edge"], z=3)
+    # overlap: A keeps the bottom half, B the top half
+    _box3d(ax, lo, hi, lo, hi, 0, hh, _BEAM["face"], _BEAM["edge"], z=4)
+    _box3d(ax, lo, hi, lo, hi, hh, bh, B_FACE, _BEAM["edge"], z=6)
+    # front arm: beam B (in y) at full height
+    _box3d(ax, lo, hi, 0, lo, 0, bh, B_FACE, _BEAM["edge"], z=8)
+    # seam line of the half-lap on the visible front face
+    q0, q1 = _iso(lo, lo, hh), _iso(hi, lo, hh)
+    ax.plot([q0[0], q1[0]], [q0[1], q1[1]], color="#333", lw=1.0, ls=(0, (4, 3)), zorder=9)
+    # dowel through both layers
+    d0, d1 = _iso((lo + hi) / 2, (lo + hi) / 2, -bh * 0.3), _iso((lo + hi) / 2, (lo + hi) / 2, bh)
+    ax.plot([d0[0], d1[0]], [d0[1], d1[1]], color="#5c3d23", lw=2.4, zorder=10)
+    ax.annotate("Holzdübel / Schraube\ndurch beide Lagen", d1,
+                (d1[0] + bw * 1.1, d1[1] + bh * 0.15), fontsize=7.5,
+                arrowprops=dict(arrowstyle="->", color="#444"))
+    eh0, eh1 = _iso(hi, hi, 0), _iso(hi, hi, bh)
+    ax.annotate(f"Eck-Höhe {_fmt(bh)}\n({_fmt(hh)}+{_fmt(hh)})", _iso(hi, hi, bh * 0.5),
+                (eh0[0] + bw * 0.5, eh0[1]), fontsize=7.5, color="#1e8449",
+                arrowprops=dict(arrowstyle="->", color="#1e8449"))
+    ax.set_xlim(-bw * 1.0, hi + bw * 2.4); ax.set_ylim(-bh * 1.9, bh + bw + bh * 0.5)
 
     fig.tight_layout(rect=[0, 0, 1, 0.9])
     return fig
@@ -327,6 +371,9 @@ def render_joinery(elements, cfg: Config) -> List[Tuple[str, str, "plt.Figure", 
         ("detail_corner", "Detail 2 — Eck-Überblattung (Balken × Balken)",
          _render_corner(cfg),
          "An den vier Ecken treffen Seitenbalken und Front-/Hinterbalken über einem Pfosten "
-         "aufeinander — beide gleich hoch. Klassisches Halbholz: jeden Balken auf halber Höhe "
-         "ausklinken, ineinanderlegen, von oben mit Dübel/Schraube auf den Pfosten verbinden."),
+         "aufeinander — beide gleich hoch. Klassisches Halbholz: jeden Balken im "
+         "Überlappungsquadrat auf <b>halbe Höhe</b> ausklinken, ineinanderlegen, von oben mit "
+         "Dübel/Schraube auf den Pfosten verbinden. Wichtig: die Ecke wird dadurch genau so "
+         "hoch wie <b>ein</b> Balken (60+60=120), nicht doppelt — es liegen zwei "
+         "<i>halbierte</i> Balken ineinander, nicht zwei volle aufeinander."),
     ]
