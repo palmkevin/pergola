@@ -42,6 +42,11 @@ _HTML = Template(
   .glossary dt { font-weight: 600; }
   .glossary dt .en { font-weight: 400; color: #888; font-size: 13px; }
   .glossary dd { margin: 0; color: #444; }
+  .section-head { padding: 4px 4px 0; }
+  .section-head h2 { margin: 18px 0 2px; font-size: 18px; }
+  .section-head p { margin: 0 0 4px; color: #666; font-size: 14px; max-width: 60em; }
+  figcaption .note { display: block; font-weight: 400; color: #555; font-size: 13px;
+                     margin-top: 4px; max-width: 70em; }
   footer { padding: 16px 32px 40px; color: #999; font-size: 12px; }
 </style>
 </head>
@@ -71,6 +76,21 @@ _HTML = Template(
     <img src="{{ img }}" alt="{{ title }}">
   </figure>
   {% endfor %}
+  {% if details %}
+  <div class="section-head">
+    <h2>Holzverbindungen / timber joints</h2>
+    <p>Die Pläne oben zeigen die Lage der Hölzer; im Modell durchdringen sie sich der
+       Einfachheit halber. Hier steht, wie sie an den Stoßstellen <b>ineinandergreifen</b>:
+       In der flush-Bauweise fluchten die Oberkanten von Sparren und Ringbalken (eine
+       Dachebene), also werden die Hölzer ausgeklinkt statt gestapelt.</p>
+  </div>
+  {% for title, img, note in details %}
+  <figure>
+    <figcaption>{{ title }}{% if note %}<span class="note">{{ note }}</span>{% endif %}</figcaption>
+    <img src="{{ img }}" alt="{{ title }}">
+  </figure>
+  {% endfor %}
+  {% endif %}
   <figure class="glossary">
     <figcaption>Bauteil-Wortschatz / glossary of parts</figcaption>
     <dl>
@@ -98,6 +118,12 @@ _HTML = Template(
       <dd>Die untere, vordere Dachkante, zu der das Dach abfällt; hier mit Regenrinne.</dd>
       <dt>Dachrinne <span class="en">(gutter)</span></dt>
       <dd>Rinne entlang der Traufe, die das Regenwasser sammelt.</dd>
+      <dt>Kämmung / Überblattung <span class="en">(housed / lap joint)</span></dt>
+      <dd>Zwei kreuzende Hölzer werden je teilweise ausgeklinkt, sodass sie ineinandergreifen
+          und (hier) die Oberkanten bündig fluchten. Sparren × Ringbalken = Kreuzüberblattung.</dd>
+      <dt>Eck-Überblattung <span class="en">(corner half-lap)</span></dt>
+      <dd>Halbholz-Eckverbindung: zwei gleich hohe Balken werden je auf halber Höhe ausgeklinkt
+          und über dem Pfosten ineinandergelegt.</dd>
     </dl>
   </figure>
 </main>
@@ -125,27 +151,39 @@ def _versioned(path: str) -> str:
 
 
 def write_outputs(views: List[Tuple[str, str, "Figure"]], outdir: str,
-                  config_name: str, units: str, model_paths: dict | None = None) -> dict:
-    """``views`` = list of (key, title, figure). ``model_paths`` = optional dict
-    of 3D-model files ({step, stl, glb}) to embed/link in the HTML. Returns paths."""
+                  config_name: str, units: str, model_paths: dict | None = None,
+                  details: List[Tuple[str, str, "Figure", str]] | None = None) -> dict:
+    """``views`` = list of (key, title, figure). ``details`` = optional list of
+    (key, title, figure, html_note) timber-joint detail drawings shown in their
+    own HTML section and appended to the PDF. ``model_paths`` = optional dict of
+    3D-model files ({step, stl, glb}) to embed/link in the HTML. Returns paths."""
     os.makedirs(outdir, exist_ok=True)
-    png_entries = []  # (title, versioned URL)
-    png_paths = []    # full paths, for the returned dict
+    details = details or []
+    png_entries = []      # (title, versioned URL)
+    png_paths = []        # full paths, for the returned dict
+    detail_entries = []   # (title, png_path, note)
     pdf_path = os.path.join(outdir, "plan.pdf")
 
     with PdfPages(pdf_path) as pdf:
         for key, title, fig in views:
-            png_name = f"{key}.png"
-            png_path = os.path.join(outdir, png_name)
+            png_path = os.path.join(outdir, f"{key}.png")
             fig.savefig(png_path, dpi=fig.get_dpi(),
                         bbox_inches="tight", facecolor="white")
             pdf.savefig(fig, facecolor="white")
             png_entries.append((title, png_path))
             png_paths.append(png_path)
+        for key, title, fig, note in details:
+            png_path = os.path.join(outdir, f"{key}.png")
+            fig.savefig(png_path, dpi=fig.get_dpi(),
+                        bbox_inches="tight", facecolor="white")
+            pdf.savefig(fig, facecolor="white")
+            detail_entries.append((title, png_path, note))
+            png_paths.append(png_path)
 
     # Cache-bust every generated asset by content hash so a redeploy is picked
     # up immediately (see _versioned). Done after the files exist on disk.
     png_entries = [(title, _versioned(p)) for title, p in png_entries]
+    detail_entries = [(title, _versioned(p), note) for title, p, note in detail_entries]
 
     model_paths = model_paths or {}
     glb_name = _versioned(model_paths["glb"]) if model_paths.get("glb") else None
@@ -155,7 +193,8 @@ def write_outputs(views: List[Tuple[str, str, "Figure"]], outdir: str,
 
     html_path = os.path.join(outdir, "index.html")
     with open(html_path, "w", encoding="utf-8") as fh:
-        fh.write(_HTML.render(views=png_entries, config_name=config_name,
+        fh.write(_HTML.render(views=png_entries, details=detail_entries,
+                              config_name=config_name,
                               units=units, pdf_name=_versioned(pdf_path),
                               model_glb=glb_name, downloads=downloads))
 

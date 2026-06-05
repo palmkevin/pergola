@@ -91,6 +91,8 @@ pergola/
   build.py         parameters -> individual box elements
   geometry.py      Box + Prism primitives, convex-hull / projection / bounds helpers
   views2d.py       plan + elevations, dimension lines, scale bar, North arrow
+  joinery.py       timber-joint detail drawings (flush only): cross-lap (Kämmung) where a
+                   rafter crosses a beam, corner half-lap (Eck-Überblattung), and a locator plan
   view3d.py        isometric render (hand-rolled axonometric, see below)
   solid.py         box model -> build123d B-rep solids -> STEP / STL / GLB export
   report.py        bundle into PNG + PDF + HTML (HTML embeds the GLB via <model-viewer>)
