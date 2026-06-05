@@ -35,6 +35,12 @@ _HTML = Template(
   model-viewer { display: block; width: 100%; height: 480px; background: #f0eee8; }
   .downloads { padding: 12px 16px; border-top: 1px solid #eee; font-size: 13px; }
   .downloads a { margin-right: 18px; }
+  .glossary { padding: 16px 20px; }
+  .glossary dl { margin: 0; display: grid; grid-template-columns: max-content 1fr;
+                 gap: 6px 18px; font-size: 14px; }
+  .glossary dt { font-weight: 600; }
+  .glossary dt .en { font-weight: 400; color: #888; font-size: 13px; }
+  .glossary dd { margin: 0; color: #444; }
   footer { padding: 16px 32px 40px; color: #999; font-size: 12px; }
 </style>
 </head>
@@ -64,6 +70,35 @@ _HTML = Template(
     <img src="{{ img }}" alt="{{ title }}">
   </figure>
   {% endfor %}
+  <figure class="glossary">
+    <figcaption>Bauteil-Wortschatz / glossary of parts</figcaption>
+    <dl>
+      <dt>Pfosten <span class="en">(post)</span></dt>
+      <dd>Senkrechte Stütze, die das Dach trägt. Steht hier auf einem Betonfundament.</dd>
+      <dt>Fundament <span class="en">(footing)</span></dt>
+      <dd>Betonblock im Boden unter jedem Pfosten.</dd>
+      <dt>Pfette <span class="en">(purlin)</span></dt>
+      <dd>Waagerechter Trägerbalken <b>parallel zur Hauswand</b> (entlang x). Liegt auf den
+          Pfosten und trägt die Sparren. Vorne die Trauf­pfette (niedrige Kante), hinten die
+          hausseitige Pfette.</dd>
+      <dt>Sparren <span class="en">(rafter)</span></dt>
+      <dd>Die Balken, die <b>senkrecht zur Hauswand</b> die Dachneigung hinunterlaufen (entlang y).
+          Sie liegen zwischen den beiden Pfetten und tragen die Dachplatte.</dd>
+      <dt>Längsbalken / Längsstrebe <span class="en">(lengthwise member)</span></dt>
+      <dd>Allgemein: ein Balken <b>parallel zur Hauswand</b> (entlang x). Hier sind das die
+          beiden Pfetten.</dd>
+      <dt>Querbalken / Querstrebe <span class="en">(crosswise member)</span></dt>
+      <dd>Allgemein: ein Balken <b>senkrecht zur Hauswand</b> (entlang y). Hier sind das die
+          Sparren sowie die beiden seitlichen Randbalken des Rahmens.</dd>
+      <dt>Rahmenring <span class="en">(perimeter beam ring)</span></dt>
+      <dd>Der umlaufende Balkenrahmen (flush-Bauweise): die zwei Pfetten plus die zwei
+          seitlichen Randbalken, die das Dach zu einer Ebene schließen.</dd>
+      <dt>Traufe <span class="en">(eave)</span></dt>
+      <dd>Die untere, vordere Dachkante, zu der das Dach abfällt; hier mit Regenrinne.</dd>
+      <dt>Dachrinne <span class="en">(gutter)</span></dt>
+      <dd>Rinne entlang der Traufe, die das Regenwasser sammelt.</dd>
+    </dl>
+  </figure>
 </main>
 <footer>Regenerate any time with <code>./run.sh</code> after editing the YAML.
 The STEP file opens in any CAD package; the GLB/STL open in 3D viewers and slicers.</footer>
