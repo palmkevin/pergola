@@ -36,6 +36,12 @@ Runs inside a `python:3.12-slim` Docker container (the host Python is 3.9; do no
 `output/{plan,elev_front,elev_side,iso3d}.png`, `output/plan.pdf`, `output/index.html`,
 and the 3D model `output/model.{step,stl,glb}`.
 
+After generating, `run.sh` serves `output/` over HTTP at **http://localhost:8000/** (a
+backgrounded host `python3 -m http.server`, started only if the port is not already answering).
+View there, not by opening the file directly — browsers block the `model.glb` fetch under a
+`file://` URL, so the embedded `<model-viewer>` 3D only loads over HTTP. The server streams the
+live directory, so the URL keeps showing the latest output after every regeneration (no restart).
+
 Always **rebuild the image after editing `requirements.txt` or the `Dockerfile`**
 (`docker build -t pergola-plan .`); code changes need no rebuild (the project is mounted).
 
@@ -58,6 +64,10 @@ specific, friendly messages — keep that style for new fields.
 
 Notable `pergola` options: `posts.house_offset` (attached layout — front posts on the footprint
 corners, house-side posts pulled this far off the wall while the roof still spans to it);
+`posts.size` (a single number for a square post, or `[x, y]` for a rectangular section);
+`framing` (`stacked`, the default — rafters sit on top of the beams; or `flush` — a one-level
+roof: `build.py` builds a full perimeter beam ring on all four sides and houses the rafters
+flush *between* the front/back beams, tops aligned, so the roof covering rests on a single plane);
 `roof.tilt_deg` (mono-pitch, sloping down toward the front, `clear_height` held on the house side);
 `roof.gutter` (rain gutter along the low front eave).
 
@@ -97,8 +107,11 @@ pergola/
 ## Roof types
 
 `roof.kind` supports `glass` (one translucent pane, `roof.thickness`), `louvered`/`slatted`
-(slats laid out by `roof.spacing`/`direction`), and `open` (no roof). Glass is rendered
-translucent everywhere (`style.ALPHA`); the sample uses it. `roof.tilt_deg` gives a mono-pitch:
+(slats laid out by `roof.spacing`/`direction`), and `open` (no roof). `glass` is the model's
+stand-in for any rigid translucent panel — real glass, or a polycarbonate / acrylic twin-wall
+(Hohlkammer) sheet; pick `roof.thickness` to match (e.g. 16 for a 16 mm twin-wall sheet) and note
+the real material in a `site.yaml` comment. Glass is rendered translucent everywhere
+(`style.ALPHA`); the sample uses it. `roof.tilt_deg` gives a mono-pitch:
 members spanning the slope direction (rafters/glass with `direction: y`) become tilted `Prism`s,
 while cross-members stay stepped boxes. `roof.gutter` adds a box gutter at the low front eave.
 
