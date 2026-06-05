@@ -3,7 +3,10 @@
     "allow": [
       "Bash(chmod +x run.sh)",
       "Bash(docker build *)",
-      "Bash(python3 -m http.server 8000 --bind 127.0.0.1)"
+      "Bash(python3 -m http.server 8000 --bind 127.0.0.1)",
+      "Bash(docker --version)",
+      "Bash(./run.sh)",
+      "WebFetch(domain:www.hornbach.de)"
     ]
   }
 }

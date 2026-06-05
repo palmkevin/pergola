@@ -5,17 +5,24 @@ Guidance for Claude Code working in this repository.
 ## What this is
 
 A parametric generator that turns a single description of a garden **pergola** and its
-surroundings into architect-style drawings: dimensioned **2D plan + elevations** and a
-**simple isometric 3D**, output as **PNG + PDF + HTML**. The end user has no CAD software,
-so deliverables are shareable images only — never produce files that need a CAD app to open.
+surroundings into two kinds of deliverable from one source model:
+1. **Architect-style drawings** — dimensioned 2D plan + elevations and a simple isometric 3D,
+   as **PNG + PDF + HTML** (viewable with no special software).
+2. **A real 3D solid model** — exported as **STEP** (editable CAD / hand to a fabricator),
+   **STL** (3D printing / quick view) and **GLB** (rotate / photorealistic render, also embedded
+   as an interactive viewer in the HTML).
+
+The end user drives this by describing measurements in plain language (or editing `site.yaml`);
+they do not operate CAD software themselves.
 
 ## Core design principle
 
-**Model everything once as 3D boxes, then derive every view from that single model.**
+**Model everything once as 3D boxes, then derive every output from that single model.**
 `build.py` expands the YAML parameters into individual boxes (each post, beam, rafter, slat,
-footing, wall, building). Every 2D view is just an orthographic projection of those boxes, and
-the 3D view uses the same boxes — so all views stay dimensionally consistent. When adding a
-feature, add it to the box model first; the views follow.
+footing, wall, building). Every 2D view is an orthographic projection of those boxes, the
+isometric drawing uses the same boxes, and the solid model (`solid.py`) turns each box/prism
+into a B-rep solid — so drawings and the CAD model stay dimensionally identical. When adding a
+feature, add it to the box model first; every output follows.
 
 ## How to run
 
@@ -26,7 +33,8 @@ feature, add it to the box model first; the views follow.
 
 Runs inside a `python:3.12-slim` Docker container (the host Python is 3.9; do not rely on it).
 `run.sh` maps the caller's uid so `output/` files are not root-owned. Outputs:
-`output/{plan,elev_front,elev_side,iso3d}.png`, `output/plan.pdf`, `output/index.html`.
+`output/{plan,elev_front,elev_side,iso3d}.png`, `output/plan.pdf`, `output/index.html`,
+and the 3D model `output/model.{step,stl,glb}`.
 
 Always **rebuild the image after editing `requirements.txt` or the `Dockerfile`**
 (`docker build -t pergola-plan .`); code changes need no rebuild (the project is mounted).
@@ -35,14 +43,23 @@ Always **rebuild the image after editing `requirements.txt` or the `Dockerfile`*
 
 There are no unit tests — verification is visual. After a change, run `./run.sh` and **read the
 generated PNGs** (plan, elevations, 3D) to confirm geometry, dimensions, and labels are correct.
+For solid-model changes, also re-import `output/model.step` with `build123d.import_step` and sanity
+-check the solid count, total volume and bounding box against the box model (a quick way to catch a
+member that failed to become a watertight solid).
 
 ## The data interface — `site.yaml`
 
 The one source of truth. Metric (`units: mm|cm|m`, normalised to mm internally). Coordinates:
 `x` = left→right, `y` = front→back, `z` = up. Sections: `pergola` (footprint, post grid, beams,
-rafters, roof slats, clear_height), `surroundings.walls` / `surroundings.buildings` (placed by
-`at` corner + `size`), `ground`. `model.py` validates it and raises `ConfigError` with specific,
-friendly messages — keep that style for new fields.
+rafters, roof, clear_height), `surroundings.walls` / `surroundings.buildings` / `surroundings.beds`
+(all placed by `at` corner + `size` (+ `height`)) and `surroundings.paths` (sloping ramps: `at` +
+`size` + `rise` + `high_end`), `ground`. `model.py` validates it and raises `ConfigError` with
+specific, friendly messages — keep that style for new fields.
+
+Notable `pergola` options: `posts.house_offset` (attached layout — front posts on the footprint
+corners, house-side posts pulled this far off the wall while the roof still spans to it);
+`roof.tilt_deg` (mono-pitch, sloping down toward the front, `clear_height` held on the house side);
+`roof.gutter` (rain gutter along the low front eave).
 
 ## Layout
 
@@ -51,10 +68,11 @@ generate.py        CLI entry (config -> all views -> report)
 pergola/
   model.py         YAML -> validated dataclasses (mm)
   build.py         parameters -> individual box elements
-  geometry.py      Box primitive + projection / bounds helpers
+  geometry.py      Box + Prism primitives, convex-hull / projection / bounds helpers
   views2d.py       plan + elevations, dimension lines, scale bar, North arrow
-  view3d.py        isometric render (mplot3d)
-  report.py        bundle into PNG + PDF + HTML
+  view3d.py        isometric render (hand-rolled axonometric, see below)
+  solid.py         box model -> build123d B-rep solids -> STEP / STL / GLB export
+  report.py        bundle into PNG + PDF + HTML (HTML embeds the GLB via <model-viewer>)
   style.py         colours, line weights, dimension styling
 ```
 
@@ -63,10 +81,36 @@ pergola/
 - Headless matplotlib only (Agg backend; set in the Dockerfile). No interactive/GUI code.
 - Surroundings (walls/buildings) are drawn semi-transparent ("ghosted") in elevations and 3D so
   they never hide the pergola. Preserve this when touching those views.
-- Keep everything pure-Python and pip-installable; do not introduce heavy CAD kernels
-  (build123d/CadQuery/OpenSCAD) — the geometry is just orthogonal boxes.
+- Keep everything pure-Python and pip-installable. The one CAD kernel in use is **build123d**
+  (OpenCascade under the hood), confined to `solid.py` for the 3D-model export; it needs the
+  `libgl1`/`libglu1-mesa`/`libxrender1`/`libxext6`/`libsm6` system libs (installed in the
+  Dockerfile) even when fully headless. Do NOT let build123d leak into the drawing code — the 2D
+  views and the isometric drawing stay pure matplotlib/numpy off the box model.
+- In `solid.py`: an axis-aligned `Box` becomes a `build123d.Box` placed by its min corner; a
+  `Prism` is built by sewing its six `faces_3d()` quads into a shell (dropping any zero-area face),
+  which handles both tilted slabs and the degenerate ramp wedge — lofting does not.
+- Most elements are axis-aligned `Box`es. Tilted members (pitched-roof rafters/glass, sloping
+  paths) are `Prism`s — general 8-corner hexahedra. Both expose the same interface
+  (`corners`/`faces_3d`/`poly_2d`/`min`/`max`/`center`); views project the corners and draw the
+  convex-hull silhouette, so they handle either uniformly. Add new tilted geometry as a `Prism`.
+
+## Roof types
+
+`roof.kind` supports `glass` (one translucent pane, `roof.thickness`), `louvered`/`slatted`
+(slats laid out by `roof.spacing`/`direction`), and `open` (no roof). Glass is rendered
+translucent everywhere (`style.ALPHA`); the sample uses it. `roof.tilt_deg` gives a mono-pitch:
+members spanning the slope direction (rafters/glass with `direction: y`) become tilted `Prism`s,
+while cross-members stay stepped boxes. `roof.gutter` adds a box gutter at the low front eave.
+
+## The 3D view
+
+`view3d.py` does NOT use mplot3d. It is a hand-rolled axonometric projection onto a 2D axes
+(back-face culling + far→near painter ordering) because mplot3d mis-sorts many parts and
+produces occlusion artefacts. Footings are excluded from 3D (they are underground and the
+ground is a single flat plane). Keep this approach if editing the 3D view.
 
 ## Known future extensions (not yet built)
 
-Roof pitch/tilt and gable roofs; back & left elevations (currently front + right side); DXF
-export via `ezdxf` if a builder ever needs an editable CAD file.
+Gable / multi-pitch roofs (only mono-pitch `tilt_deg` exists); back & left elevations (currently
+front + right side); 2D DXF export (`ezdxf` is already installed as a build123d dependency, so a
+dimensioned DXF sheet is now low-effort if a builder wants editable 2D CAD).

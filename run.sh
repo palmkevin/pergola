@@ -33,4 +33,19 @@ echo ">> Generating plan from $CONFIG…"
   "$IMAGE" \
   python generate.py "$CONFIG"
 
-echo ">> Done. See ./output/  (open output/index.html in a browser)"
+# Serve ./output over HTTP so the interactive 3D (model.glb) loads — browsers
+# block that fetch under a file:// URL. The server streams the directory live, so
+# once it runs it always serves the freshly generated files: the URL below stays
+# valid after every ./run.sh, no restart needed.
+PORT=8000
+if curl -s -o /dev/null "http://localhost:${PORT}/"; then
+  echo ">> Viewer already live at http://localhost:${PORT}/"
+elif command -v python3 >/dev/null 2>&1; then
+  nohup python3 -m http.server "$PORT" --directory "$PWD/output" >/tmp/pergola-server.log 2>&1 &
+  disown
+  echo ">> Started viewer at http://localhost:${PORT}/"
+else
+  echo ">> python3 not found on host — open output/index.html via your own web server." >&2
+fi
+
+echo ">> Done. View at http://localhost:${PORT}/  (files in ./output/)"

@@ -46,7 +46,8 @@ python generate.py site.yaml
 Open [site.yaml](site.yaml) and change the numbers — or just tell Claude Code the
 measurements and it will edit the file for you. Key sections:
 
-- `pergola` — footprint, post grid, beams, rafters, roof slats, clear height.
+- `pergola` — footprint, post grid, beams, rafters, clear height, and `roof.kind`
+  (`glass`, `louvered`, `slatted`, or `open`).
 - `surroundings.walls` / `surroundings.buildings` — context placed by `at` (corner)
   and `size`, in the same coordinate system.
 - `ground` — the drawn ground area.

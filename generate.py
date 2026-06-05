@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 
 from pergola.build import build_elements
 from pergola.model import ConfigError, load_config
-from pergola import views2d, view3d, report
+from pergola import views2d, view3d, report, solid
 
 
 def main(argv=None) -> int:
@@ -43,7 +43,11 @@ def main(argv=None) -> int:
         ("iso3d",      "Isometric 3D",        view3d.render_iso(elements, cfg)),
     ]
 
-    paths = report.write_outputs(views, args.out, os.path.basename(args.config), cfg.units)
+    # Real 3D solid model (STEP / STL / glTF) from the same box model.
+    model_paths = solid.export_model(elements, args.out)
+
+    paths = report.write_outputs(views, args.out, os.path.basename(args.config),
+                                 cfg.units, model_paths)
     for _, _, fig in views:
         plt.close(fig)
 
@@ -52,6 +56,11 @@ def main(argv=None) -> int:
         print(f"  {p}")
     print(f"  {paths['pdf']}")
     print(f"  {paths['html']}   <- open this in a browser")
+    print("  --- 3D model ---")
+    print(f"  {model_paths['step']}   <- editable CAD / hand to a fabricator")
+    print(f"  {model_paths['stl']}    <- 3D printing / quick view")
+    if "glb" in model_paths:
+        print(f"  {model_paths['glb']}    <- rotate / photorealistic render")
     return 0
 
 

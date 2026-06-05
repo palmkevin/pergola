@@ -17,7 +17,7 @@ from typing import Callable, List, Sequence
 import matplotlib
 matplotlib.use("Agg")  # headless
 import matplotlib.pyplot as plt
-from matplotlib.patches import Rectangle
+from matplotlib.patches import Polygon, Rectangle
 
 from . import style
 from .geometry import X, Y, Z, Box, bounds
@@ -54,11 +54,13 @@ def _draw_boxes(ax, boxes: Sequence[Box], h: int, v: int, nearness: Callable[[Bo
     """
     ordered = sorted(boxes, key=lambda b: (nearness(b), style.zorder_for(b.category)))
     for i, b in enumerate(ordered):
-        x, y, w, ht = b.rect_2d(h, v)
+        poly = b.poly_2d(h, v)            # true silhouette (handles tilted prisms)
+        if len(poly) < 2:
+            continue
         st = style.style_for(b.category)
         alpha = ghost_alpha if b.category in ghost else style.ALPHA.get(b.category, 1.0)
-        ax.add_patch(Rectangle(
-            (x, y), w, ht,
+        ax.add_patch(Polygon(
+            poly, closed=True,
             facecolor=st["face"], edgecolor=st["edge"], alpha=alpha,
             linewidth=style.EDGE_WIDTH, zorder=2 + i * 1e-3,
         ))
@@ -125,7 +127,7 @@ def render_plan(elements: List[Box], cfg: Config):
 
     # Labels for surroundings.
     for b in elements:
-        if b.category in ("wall", "building") and b.label:
+        if b.category in ("wall", "building", "bed", "path") and b.label:
             ax.text(b.center[X], b.center[Y], b.label, ha="center", va="center",
                     fontsize=style.LABEL_FONTSIZE, color="#444444", zorder=10)
 

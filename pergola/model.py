@@ -7,7 +7,7 @@ mistakes in the YAML are easy to fix.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 import yaml
 
@@ -31,10 +31,16 @@ class Footing:
 
 @dataclass
 class Posts:
-    size: float
+    size_x: float       # post cross-section along x
+    size_y: float       # post cross-section along y (equal to size_x for a square post)
     count_x: int
     count_y: int
     footing: Footing
+    # Attached pergolas only: distance from the house wall to the FACE of the
+    # house-side post row. When set, the front row sits on the footprint corners
+    # and the back row is pulled this far off the wall (the roof still spans to
+    # the wall). None -> posts are evenly spaced across the footprint as before.
+    house_offset: Optional[float] = None
 
 
 @dataclass
@@ -60,6 +66,9 @@ class Roof:
     spacing: float
     direction: str
     thickness: float    # glass pane thickness (only used when kind == "glass")
+    tilt_deg: float     # roof pitch; slopes DOWN toward the front (y-min), house
+                        # side (y-max) high. clear_height is the house-side value.
+    gutter: bool        # add a rain gutter along the low (front) eave
 
 
 @dataclass
@@ -69,6 +78,9 @@ class Pergola:
     width: float
     depth: float
     clear_height: float
+    framing: str        # "stacked" (rafters on top of beams) | "flush" (one-level
+                        # frame: a perimeter beam ring with rafters housed flush
+                        # between the front/back beams, so the roof is one plane)
     posts: Posts
     beams: Beams
     rafters: Rafters
@@ -86,6 +98,18 @@ class Block:
 
 
 @dataclass
+class Path:
+    """A sloping garden path / ramp: a flat footprint that rises to ``rise`` at
+    one edge (``high_end``) and meets ground level (z=0) at the opposite edge."""
+
+    name: str
+    at: Tuple[float, float]    # min corner (x, y)
+    size: Tuple[float, float]  # (x, y) footprint
+    rise: float                # height (z) at the high edge
+    high_end: str              # which edge is high: x_min | x_max | y_min | y_max
+
+
+@dataclass
 class Ground:
     origin: Tuple[float, float]
     extent: Tuple[float, float]
@@ -98,6 +122,8 @@ class Config:
     pergola: Pergola
     walls: List[Block]
     buildings: List[Block]
+    beds: List[Block]
+    paths: List[Path]
     ground: Ground
 
 
@@ -161,14 +187,26 @@ def load_config(path: str) -> Config:
     if cx < 2 or cy < 2:
         raise ConfigError("pergola.posts.count_x and count_y must each be >= 2.")
     fo = _require(po, "footing", "pergola.posts")
+    house_offset = po.get("house_offset")
+    # size: a single number (square post) or a [x, y] pair (rectangular post).
+    raw_size = _require(po, "size", "pergola.posts")
+    if isinstance(raw_size, (list, tuple)):
+        size_x, size_y = P(raw_size, "pergola.posts.size")
+        if size_x <= 0 or size_y <= 0:
+            raise ConfigError("pergola.posts.size values must each be greater than 0.")
+    else:
+        size_x = size_y = L(raw_size, "pergola.posts.size", positive=True)
     posts = Posts(
-        size=L(_require(po, "size", "pergola.posts"), "pergola.posts.size", positive=True),
+        size_x=size_x,
+        size_y=size_y,
         count_x=cx,
         count_y=cy,
         footing=Footing(
             size=L(_require(fo, "size", "footing"), "footing.size", positive=True),
             depth=L(_require(fo, "depth", "footing"), "footing.depth", positive=True),
         ),
+        house_offset=(L(house_offset, "pergola.posts.house_offset", positive=True)
+                      if house_offset is not None else None),
     )
 
     be = _require(pg, "beams", "pergola")
@@ -191,6 +229,9 @@ def load_config(path: str) -> Config:
     if kind not in ("louvered", "slatted", "glass", "open"):
         raise ConfigError("pergola.roof.kind must be 'louvered', 'slatted', 'glass' or 'open'.")
     slat = ro.get("slat") or {}
+    tilt = _num(ro.get("tilt_deg", 0), "pergola.roof.tilt_deg")
+    if not 0 <= tilt < 60:
+        raise ConfigError("pergola.roof.tilt_deg must be between 0 and 60 degrees.")
     roof = Roof(
         kind=kind,
         slat_width=L(slat.get("width", 80), "pergola.roof.slat.width", positive=True),
@@ -198,7 +239,13 @@ def load_config(path: str) -> Config:
         spacing=L(ro.get("spacing", 100), "pergola.roof.spacing", positive=True),
         direction=_axis(ro.get("direction", "x"), "pergola.roof.direction"),
         thickness=L(ro.get("thickness", 10), "pergola.roof.thickness", positive=True),
+        tilt_deg=tilt,
+        gutter=bool(ro.get("gutter", False)),
     )
+
+    framing = str(pg.get("framing", "stacked")).lower()
+    if framing not in ("stacked", "flush"):
+        raise ConfigError("pergola.framing must be 'stacked' or 'flush'.")
 
     pergola = Pergola(
         type=p_type,
@@ -206,6 +253,7 @@ def load_config(path: str) -> Config:
         width=L(_require(fp, "width", "pergola.footprint"), "pergola.footprint.width", positive=True),
         depth=L(_require(fp, "depth", "pergola.footprint"), "pergola.footprint.depth", positive=True),
         clear_height=L(_require(pg, "clear_height", "pergola"), "pergola.clear_height", positive=True),
+        framing=framing,
         posts=posts,
         beams=beams,
         rafters=rafters,
@@ -216,6 +264,8 @@ def load_config(path: str) -> Config:
     surroundings = raw.get("surroundings") or {}
     walls = [_block(w, P, L, "wall") for w in (surroundings.get("walls") or [])]
     buildings = [_block(b, P, L, "building") for b in (surroundings.get("buildings") or [])]
+    beds = [_block(b, P, L, "bed") for b in (surroundings.get("beds") or [])]
+    paths = [_path(p, P, L) for p in (surroundings.get("paths") or [])]
 
     # --- ground ------------------------------------------------------------ #
     gr = raw.get("ground") or {}
@@ -230,6 +280,8 @@ def load_config(path: str) -> Config:
         pergola=pergola,
         walls=walls,
         buildings=buildings,
+        beds=beds,
+        paths=paths,
         ground=ground,
     )
 
@@ -248,4 +300,19 @@ def _block(item, P, L, kind: str) -> Block:
         at=P(_require(item, "at", f"{kind} '{name}'"), f"{kind}.at"),
         size=P(_require(item, "size", f"{kind} '{name}'"), f"{kind}.size"),
         height=L(_require(item, "height", f"{kind} '{name}'"), f"{kind}.height", positive=True),
+    )
+
+
+def _path(item, P, L) -> Path:
+    name = str(item.get("name", "Path"))
+    high = str(item.get("high_end", "x_min")).lower()
+    if high not in ("x_min", "x_max", "y_min", "y_max"):
+        raise ConfigError(
+            f"path '{name}': high_end must be one of x_min/x_max/y_min/y_max, got {high!r}.")
+    return Path(
+        name=name,
+        at=P(_require(item, "at", f"path '{name}'"), "path.at"),
+        size=P(_require(item, "size", f"path '{name}'"), "path.size"),
+        rise=L(_require(item, "rise", f"path '{name}'"), "path.rise", positive=True),
+        high_end=high,
     )

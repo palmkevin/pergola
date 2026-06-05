@@ -9,7 +9,6 @@
 #    y  = front -> back     (depth, "back" = toward the house if attached)
 #    z  = ground -> sky     (height)
 #  All values are in the unit given by `units` (mm by default).
-#  The sample numbers below are PLACEHOLDERS — replace with your real ones.
 # =============================================================================
 
 units: mm
@@ -21,31 +20,48 @@ pergola:
   type: attached        # "attached" (against a wall) or "freestanding"
   origin: [0, 0]        # near-left (min x, min y) corner of the footprint
   footprint:
-    width: 4000         # x extent
-    depth: 3000         # y extent
-  clear_height: 2400    # top of posts / underside of the beams
+    width: 2800         # x extent
+    depth: 2800         # y extent (front edge .. house wall)
+  clear_height: 2400    # underside of the roof on the HIGH (house) side
+  framing: flush        # "flush" = one-level roof: a perimeter beam ring with the
+                        # rafters housed flush BETWEEN the front/back beams (tops
+                        # aligned), so the roof is a single plane (no stacked layer).
+                        # "stacked" = classic rafters-on-top-of-beams.
 
   posts:
-    size: 120           # square cross-section (size x size)
-    count_x: 3          # posts along x (>= 2)
-    count_y: 2          # posts along y (>= 2)
+    # Available timber: 80 x 60 mm. Posts carry mostly axial load (tiny here), so
+    # the smaller section is fine; corner braces handle lateral sway.
+    size: [80, 60]      # cross-section [x, y] (a single number = square post)
+    count_x: 2          # 2 x 2 = 4 posts
+    count_y: 2
+    # Attached layout: the two outer posts sit exactly on the front corners,
+    # while the house-side posts stand 200 mm (face) off the wall. The roof
+    # still spans the full depth to the wall (it cantilevers past these posts).
+    house_offset: 200
     footing:
       size: 300         # square concrete footing under each post
       depth: 600        # how deep below ground
 
-  beams:                # horizontal members sitting on top of the posts
-    width: 120
-    height: 200
-    direction: x        # beams span along x (one per row of posts)
+  beams:                # the perimeter frame ring (flush framing builds all 4 sides)
+    # Available timber: 120 x 80 mm, set on edge (120 = height) for stiffness — the
+    # bending-critical members, so the bigger section goes here.
+    width: 80
+    height: 120
+    direction: x        # (ignored when framing: flush — the full ring is built)
 
-  rafters:              # members laid across the beams
+  rafters:              # housed flush between the front/back beams, follow the slope
+    # Available timber: 80 x 60 mm, on edge (80 = height).
     width: 60
-    height: 140
-    spacing: 400        # centre-to-centre
-    direction: y        # rafters span along y
+    height: 80
+    spacing: 470        # centre-to-centre (matches the polycarbonate/acrylic support span)
+    direction: y        # rafters span along y (down the slope)
 
   roof:
-    kind: louvered      # "louvered" / "slatted" / "open" (open = no slats)
+    kind: glass         # translucent panel representation (here: acrylic twin-wall sheet)
+    thickness: 16       # Gutta Acryl-Hohlkammerplatte 32/16, 3000 x 980 x 16 mm
+    tilt_deg: 6         # pitch: slopes DOWN toward the front, to shed rain/snow
+    gutter: true        # rain gutter along the low (front, house-away) eave
+    # The fields below only apply to louvered/slatted roofs:
     slat:
       width: 80
       height: 20
@@ -54,16 +70,40 @@ pergola:
 
 surroundings:
   walls:
+    # PROVISIONAL (from site photos 2026-06-03, NOT measured): the pergola attaches
+    # to a low, single-storey white horizontally-clad building with an eave overhang
+    # — not a tall masonry house. Height set to a realistic single-storey placeholder
+    # (~2.8 m to the eave). CONFIRM with a real measurement: the building's eave
+    # height vs the pergola roof top (~2750 mm at the house side) decides whether the
+    # pergola tucks under the eave or needs to be lowered.
     - name: House wall
       at: [-500, 3000]  # min corner (x, y) — behind the pergola (it is attached here)
       size: [5000, 200] # (x, y) footprint of the wall
-      height: 6000
-  buildings:
-    - name: Garden shed
-      at: [5200, 800]
-      size: [2500, 2000]
-      height: 2200
+      height: 2800      # provisional single-storey eave height (was 6000 placeholder)
+
+  # A sloping path on the LEFT of the pergola, running parallel to the house
+  # wall (along x). You walk down it from the left: 1 m high at the far edge,
+  # tapering to ground level at the pergola's left edge. 80 cm wide, its back
+  # edge 125 cm clear of the house wall (room for the 125 cm house-side bed).
+  paths:
+    - name: Path
+      at: [-1500, 950]
+      size: [1500, 800]   # (x length, y width = 80 cm)
+      rise: 1000          # 1 m high at the high_end edge, 0 at the other
+      high_end: x_min     # high on the far-left edge
+
+  # Raised beds (30 cm) flanking the path, one on each side, over its length.
+  # Each 125 cm wide; the house-side bed runs right up to the house wall.
+  beds:
+    - name: Bed
+      at: [-1500, -300]   # front side of the path (y -0.30 .. 0.95 m)
+      size: [1500, 1250]
+      height: 300
+    - name: Bed
+      at: [-1500, 1750]   # house side of the path (y 1.75 .. 3.00 m, against the wall)
+      size: [1500, 1250]
+      height: 300
 
 ground:
-  origin: [-1500, -1500]   # min corner of the drawn ground area
-  extent: [10000, 7000]    # (x, y) size of the drawn ground area
+  origin: [-1800, -1200]   # min corner of the drawn ground area
+  extent: [7000, 5000]     # (x, y) size of the drawn ground area
