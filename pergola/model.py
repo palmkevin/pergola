@@ -72,6 +72,23 @@ class Roof:
 
 
 @dataclass
+class Curtains:
+    """Fabric curtains hung on curtain rods between the corner posts.
+
+    Each named side gets a horizontal rod spanning between that side's two
+    corner posts (attached to them), with a fabric panel hanging from it down
+    toward the ground. Sides: ``left``/``right`` (rods run front->back along y)
+    and ``front``/``back`` (rods run left->right along x)."""
+
+    sides: List[str]            # subset of left | right | front | back
+    rod_diameter: float         # curtain-rod cross-section (square, mm)
+    fabric_thickness: float     # drawn thickness of the hanging fabric (mm)
+    top_gap: float              # rod centre this far below the beam underside
+    bottom_gap: float           # fabric hem this far above the ground (z=0)
+    overhang: float             # rod extension beyond each post end
+
+
+@dataclass
 class Pergola:
     type: str           # attached | freestanding
     origin: Tuple[float, float]
@@ -85,6 +102,7 @@ class Pergola:
     beams: Beams
     rafters: Rafters
     roof: Roof
+    curtains: Optional[Curtains] = None
 
 
 @dataclass
@@ -247,6 +265,31 @@ def load_config(path: str) -> Config:
     if framing not in ("stacked", "flush"):
         raise ConfigError("pergola.framing must be 'stacked' or 'flush'.")
 
+    curtains = None
+    cu = pg.get("curtains")
+    if cu:
+        if not isinstance(cu, dict):
+            raise ConfigError("pergola.curtains must be a mapping of options.")
+        raw_sides = cu.get("sides", ["left", "right"])
+        if not isinstance(raw_sides, (list, tuple)) or not raw_sides:
+            raise ConfigError("pergola.curtains.sides must be a non-empty list.")
+        sides = []
+        for s in raw_sides:
+            sv = str(s).lower()
+            if sv not in ("left", "right", "front", "back"):
+                raise ConfigError(
+                    "pergola.curtains.sides entries must be one of "
+                    f"left/right/front/back, got {s!r}.")
+            sides.append(sv)
+        curtains = Curtains(
+            sides=sides,
+            rod_diameter=L(cu.get("rod_diameter", 30), "pergola.curtains.rod_diameter", positive=True),
+            fabric_thickness=L(cu.get("fabric_thickness", 30), "pergola.curtains.fabric_thickness", positive=True),
+            top_gap=L(cu.get("top_gap", 80), "pergola.curtains.top_gap"),
+            bottom_gap=L(cu.get("bottom_gap", 100), "pergola.curtains.bottom_gap"),
+            overhang=L(cu.get("overhang", 40), "pergola.curtains.overhang"),
+        )
+
     pergola = Pergola(
         type=p_type,
         origin=P(pg.get("origin", [0, 0]), "pergola.origin"),
@@ -258,6 +301,7 @@ def load_config(path: str) -> Config:
         beams=beams,
         rafters=rafters,
         roof=roof,
+        curtains=curtains,
     )
 
     # --- surroundings ------------------------------------------------------ #
