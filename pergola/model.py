@@ -41,6 +41,11 @@ class Posts:
     # and the back row is pulled this far off the wall (the roof still spans to
     # the wall). None -> posts are evenly spaced across the footprint as before.
     house_offset: Optional[float] = None
+    # Explicit post-row CENTRE distances from the house wall (back roof edge),
+    # one per row (== count_y). When set, both rows are placed by these values
+    # so the roof can overhang the post ring on BOTH the front and house sides.
+    # Takes precedence over house_offset. None -> use house_offset / even layout.
+    rows_y_from_wall: Optional[List[float]] = None
 
 
 @dataclass
@@ -206,6 +211,15 @@ def load_config(path: str) -> Config:
         raise ConfigError("pergola.posts.count_x and count_y must each be >= 2.")
     fo = _require(po, "footing", "pergola.posts")
     house_offset = po.get("house_offset")
+    rows_raw = po.get("rows_y_from_wall")
+    rows_y_from_wall = None
+    if rows_raw is not None:
+        if not isinstance(rows_raw, (list, tuple)) or len(rows_raw) != cy:
+            raise ConfigError(
+                "pergola.posts.rows_y_from_wall must list exactly count_y "
+                f"value(s) (one centre distance from the wall per row), got {rows_raw!r}.")
+        rows_y_from_wall = [
+            L(v, "pergola.posts.rows_y_from_wall", positive=True) for v in rows_raw]
     # size: a single number (square post) or a [x, y] pair (rectangular post).
     raw_size = _require(po, "size", "pergola.posts")
     if isinstance(raw_size, (list, tuple)):
@@ -225,6 +239,7 @@ def load_config(path: str) -> Config:
         ),
         house_offset=(L(house_offset, "pergola.posts.house_offset", positive=True)
                       if house_offset is not None else None),
+        rows_y_from_wall=rows_y_from_wall,
     )
 
     be = _require(pg, "beams", "pergola")

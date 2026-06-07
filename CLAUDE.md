@@ -75,6 +75,9 @@ specific, friendly messages — keep that style for new fields.
 
 Notable `pergola` options: `posts.house_offset` (attached layout — front posts on the footprint
 corners, house-side posts pulled this far off the wall while the roof still spans to it);
+`posts.rows_y_from_wall` (a list of post-row centre distances from the house wall, one per
+`count_y`; places BOTH rows explicitly so the roof can overhang the post ring on the front *and*
+house sides — takes precedence over `house_offset`);
 `posts.size` (a single number for a square post, or `[x, y]` for a rectangular section);
 `framing` (`stacked`, the default — rafters sit on top of the beams; or `flush` — a one-level
 roof: `build.py` builds a full perimeter beam ring on all four sides and houses the rafters

@@ -73,9 +73,14 @@ def build_pergola(pg: Pergola) -> List[Box]:
 
     # Post X centres: outer posts inset by half a post so they sit inside the footprint.
     xs = _linspace_centers(ox + half_x, w - ps.size_x, ps.count_x)
-    # Post Y centres. With house_offset (attached): front row on the footprint
-    # corner, house-side row pulled `house_offset` off the wall; otherwise even.
-    if ps.house_offset is not None:
+    # Post Y centres. Explicit `rows_y_from_wall` (centre distances from the
+    # house wall = back roof edge) wins: both rows are placed by those values so
+    # the roof can overhang the ring front AND back. Else house_offset (attached:
+    # front row on the footprint corner, house-side row pulled off the wall),
+    # else evenly spaced.
+    if ps.rows_y_from_wall is not None:
+        ys = np.sort(np.array([oy + d - v for v in ps.rows_y_from_wall]))
+    elif ps.house_offset is not None:
         front = oy + half_y
         back = oy + d - ps.house_offset - half_y
         if ps.count_y == 2:
