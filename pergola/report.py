@@ -118,6 +118,13 @@ _HTML = Template(
       <dd>Die untere, vordere Dachkante, zu der das Dach abfällt; hier mit Regenrinne.</dd>
       <dt>Dachrinne <span class="en">(gutter)</span></dt>
       <dd>Rinne entlang der Traufe, die das Regenwasser sammelt.</dd>
+      <dt>Gardinenstange <span class="en">(curtain rod)</span></dt>
+      <dd>Waagerechte Stange, zwischen den beiden Eckpfosten einer Seite gespannt
+          und an ihnen befestigt; daran hängt die Gardine.</dd>
+      <dt>Gardine <span class="en">(curtain)</span></dt>
+      <dd>Stoffbahn, die seitlich an der Gardinenstange hängt und für Schatten und
+          Sichtschutz sorgt. In den Zeichnungen halbtransparent dargestellt, damit
+          die Konstruktion dahinter sichtbar bleibt.</dd>
       <dt>Kämmung / Überblattung <span class="en">(housed / lap joint)</span></dt>
       <dd>Zwei kreuzende Hölzer werden je teilweise ausgeklinkt, sodass sie ineinandergreifen
           und (hier) die Oberkanten bündig fluchten. Sparren × Ringbalken = Kreuzüberblattung.</dd>

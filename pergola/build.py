@@ -200,6 +200,45 @@ def build_pergola(pg: Pergola) -> List[Box]:
             category="gutter",
         ))
 
+    # Fabric curtains on curtain rods, strung between the corner posts. Each
+    # side gets one horizontal rod (attached to that side's two corner posts)
+    # with a fabric panel hanging from it down toward the ground.
+    cu = pg.curtains
+    if cu is not None:
+        rd = cu.rod_diameter
+        ft = cu.fabric_thickness
+        x0p, x1p = xs[0], xs[-1]                 # left / right post centre lines
+        y0p, y1p = ys[0], ys[-1]                 # front / back post centre lines
+        for side in cu.sides:
+            if side in ("left", "right"):        # rod runs front->back along y
+                xc = x0p if side == "left" else x1p
+                rod_cz = underside(y0p) - cu.top_gap          # horizontal rod centre
+                # Rod: a square bar spanning the posts (plus a small overhang).
+                boxes.append(Box(
+                    pos=(xc - rd / 2, y0p - cu.overhang, rod_cz - rd / 2),
+                    size=(rd, (y1p - y0p) + 2 * cu.overhang, rd),
+                    category="rod",
+                ))
+                # Fabric: a thin panel hung from the rod down to the hem.
+                boxes.append(Box(
+                    pos=(xc - ft / 2, y0p, cu.bottom_gap),
+                    size=(ft, y1p - y0p, rod_cz - cu.bottom_gap),
+                    category="curtain",
+                ))
+            else:                                # front / back: rod runs along x
+                yc = y0p if side == "front" else y1p
+                rod_cz = underside(yc) - cu.top_gap
+                boxes.append(Box(
+                    pos=(x0p - cu.overhang, yc - rd / 2, rod_cz - rd / 2),
+                    size=((x1p - x0p) + 2 * cu.overhang, rd, rd),
+                    category="rod",
+                ))
+                boxes.append(Box(
+                    pos=(x0p, yc - ft / 2, cu.bottom_gap),
+                    size=(x1p - x0p, ft, rod_cz - cu.bottom_gap),
+                    category="curtain",
+                ))
+
     return boxes
 
 

@@ -72,6 +72,17 @@ pergola:
     spacing: 100        # centre-to-centre between slats
     direction: x        # slats span along x
 
+  # Stoffgardinen an den beiden Seiten (links & rechts). Jede Seite bekommt eine
+  # Gardinenstange, die zwischen ihren beiden Eckpfosten gespannt und an ihnen
+  # befestigt ist; daran hängt eine Stoffbahn bis kurz über den Boden.
+  curtains:
+    sides: [left, right]   # Seiten mit Gardine (left/right/front/back möglich)
+    rod_diameter: 30       # Querschnitt der Gardinenstange (mm, quadratisch)
+    fabric_thickness: 30   # dargestellte Stoffdicke (mm)
+    top_gap: 80            # Stangenmitte unter der Balkenunterkante (mm)
+    bottom_gap: 100        # Saum über dem Boden (mm)
+    overhang: 40           # Überstand der Stange je Pfostenende (mm)
+
 surroundings:
   walls:
     # PROVISIONAL (from site photos 2026-06-03, NOT measured): the pergola attaches

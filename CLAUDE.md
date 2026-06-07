@@ -80,7 +80,10 @@ corners, house-side posts pulled this far off the wall while the roof still span
 roof: `build.py` builds a full perimeter beam ring on all four sides and houses the rafters
 flush *between* the front/back beams, tops aligned, so the roof covering rests on a single plane);
 `roof.tilt_deg` (mono-pitch, sloping down toward the front, `clear_height` held on the house side);
-`roof.gutter` (rain gutter along the low front eave).
+`roof.gutter` (rain gutter along the low front eave);
+`curtains` (optional fabric curtains hung on curtain rods strung between the corner posts — pick
+`sides` from `left`/`right`/`front`/`back`; each side adds a horizontal `rod` box between that
+side's two corner posts plus a hanging `curtain` fabric panel, drawn semi-transparent like glass).
 
 ## Layout
 
