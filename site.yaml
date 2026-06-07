@@ -53,20 +53,20 @@ pergola:
     # Available timber: 80 x 60 mm, on edge (80 = height).
     width: 60
     height: 80
-    spacing: 400        # target clear field between supports. With flush framing the
+    spacing: 660        # target clear field between supports. With flush framing the
                         # two side beams act as the outer supports and the rafters are
-                        # spread evenly across the bay between them. Tightened from 660
-                        # to ~400 mm because the roof is now a 6 mm SOLID acrylic sheet:
-                        # a solid 6 mm pane deflects ~24 mm over a 660 mm field under
-                        # snow (L/28, ponding + creep) but only ~3 mm over 400 mm
-                        # (~L/125). 400 mm gives ~6 interior rafters across the bay.
+                        # spread evenly across the bay between them (3 interior rafters,
+                        # ~660 mm fields). The 12 mm SOLID acrylic sheet is stiff enough
+                        # for this span: it deflects only ~3 mm over 660 mm under snow
+                        # (~L/220). A thinner 6 mm solid pane would need ~400 mm fields.
     direction: y        # rafters span along y (down the slope)
 
   roof:
     kind: glass         # translucent panel representation (here: SOLID acrylic sheet)
-    thickness: 6        # Acryl-Massivplatte (Plexiglas GS), 6 mm — smooth, no chambers
-                        # (cleaner look from below) but ~7 kg/m² vs 2.7 for twin-wall and
-                        # far less span: needs the tighter rafter spacing above.
+    thickness: 12       # Acryl-Massivplatte (Plexiglas GS), 12 mm — smooth, no chambers
+                        # (cleaner look from below). ~14 kg/m² (vs 2.7 twin-wall / 7 for
+                        # 6 mm) but stiff enough for the wide 660 mm rafter fields, so
+                        # only 3 interior rafters are needed (8x stiffer than 6 mm).
     tilt_deg: 4         # pitch: slopes DOWN toward the front, to shed rain/snow. Lowered
                         # 6 -> 4 deg: a smooth solid pane tolerates a flatter roof than a
                         # twin-wall sheet (still keep a real fall — do NOT go near-flat).
