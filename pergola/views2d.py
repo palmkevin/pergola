@@ -136,10 +136,39 @@ def render_plan(elements: List[Box], cfg: Config):
     _hdim(ax, ox, ox + pg.width, oy - pg.depth * 0.18, feat_y=oy)
     _vdim(ax, oy, oy + pg.depth, ox - pg.width * 0.14, feat_x=ox)
 
+    # Post-grid positioning: a dimension chain on each axis from the footprint
+    # edge through every post centre-line to the far edge — so the inset of the
+    # outer posts AND the centre-to-centre spacing of the grid are both readable.
+    x_level = oy - pg.depth * 0.34
+    y_level = ox - pg.width * 0.30
+    posts = [b for b in elements if b.category == "post"]
+    if posts:
+        xs_c = sorted({round(float(b.center[X]), 3) for b in posts})
+        ys_c = sorted({round(float(b.center[Y]), 3) for b in posts})
+
+        # Light dashed centre lines through the posts, both directions.
+        for xc in xs_c:
+            ax.plot([xc, xc], [oy, oy + pg.depth], color=style.DIM_COLOR,
+                    lw=0.5, ls=(0, (4, 3)), alpha=0.45, zorder=15)
+        for yc in ys_c:
+            ax.plot([ox, ox + pg.width], [yc, yc], color=style.DIM_COLOR,
+                    lw=0.5, ls=(0, (4, 3)), alpha=0.45, zorder=15)
+
+        for a, b in zip([ox] + xs_c, xs_c + [ox + pg.width]):
+            if abs(b - a) > 1e-6:
+                _hdim(ax, a, b, x_level, feat_y=oy)
+        for a, b in zip([oy] + ys_c, ys_c + [oy + pg.depth]):
+            if abs(b - a) > 1e-6:
+                _vdim(ax, a, b, y_level, feat_x=ox)
+        ax.text((ox + ox + pg.width) / 2, x_level - pg.depth * 0.05,
+                "Pfostenachsen (Mitte–Mitte)", ha="center", va="top",
+                fontsize=style.LABEL_FONTSIZE, color=style.DIM_COLOR, zorder=21)
+
     lo, hi = _content_bounds_2d(elements, g, X, Y)
-    _set_limits(ax, lo[0], hi[0], lo[1], hi[1])
-    _scale_bar(ax, lo[0], lo[1] - (hi[1] - lo[1]) * 0.04)
-    _north_arrow(ax, hi[0], hi[1], (hi[0] - lo[0]), cfg.north_deg)
+    lo_h, lo_v = min(lo[0], y_level), min(lo[1], x_level)
+    _set_limits(ax, lo_h, hi[0], lo_v, hi[1])
+    _scale_bar(ax, lo_h, lo_v - (hi[1] - lo_v) * 0.04)
+    _north_arrow(ax, hi[0], hi[1], (hi[0] - lo_h), cfg.north_deg)
     return fig
 
 
@@ -305,8 +334,21 @@ def _render_elevation(elements, cfg: Config, *, h, v, nearness, title, subtitle,
     _vdim(ax, 0, pg.clear_height, ph0 + pspan + pspan * 0.10,
           feat_x=ph0 + pspan, text=_fmt(pg.clear_height))           # clear height
 
-    _set_limits(ax, lo[0], hi[0], min(lo[1], plo[Z]), hi[1])
-    _scale_bar(ax, lo[0], min(lo[1], plo[Z]) - top * 0.06)
+    # Post positioning: a chain along this elevation's horizontal axis from the
+    # footprint edge through each post centre-line to the far edge.
+    posts = [b for b in elements if b.category == "post"]
+    post_level = -top * 0.26
+    if posts:
+        pc = sorted({round(float(b.center[h]), 3) for b in posts})
+        for xc in pc:
+            ax.plot([xc, xc], [0, top], color=style.DIM_COLOR,
+                    lw=0.5, ls=(0, (4, 3)), alpha=0.45, zorder=15)
+        for a, b in zip([ph0] + pc, pc + [ph0 + pspan]):
+            if abs(b - a) > 1e-6:
+                _hdim(ax, a, b, post_level, feat_y=0)
+
+    _set_limits(ax, lo[0], hi[0], min(lo[1], plo[Z], post_level), hi[1])
+    _scale_bar(ax, lo[0], min(lo[1], plo[Z], post_level) - top * 0.06)
     return fig
 
 
