@@ -37,10 +37,11 @@ def main(argv=None) -> int:
     print(f"Built {len(elements)} elements from {args.config}.")
 
     views = [
-        ("plan",       "Plan (top view)",     views2d.render_plan(elements, cfg)),
-        ("elev_front", "Front elevation",     views2d.render_front(elements, cfg)),
-        ("elev_side",  "Side elevation",      views2d.render_side(elements, cfg)),
-        ("iso3d",      "Isometric 3D",        view3d.render_iso(elements, cfg)),
+        ("plan",         "Plan (top view)",            views2d.render_plan(elements, cfg)),
+        ("rafter_plan",  "Sparrenabstände (Draufsicht)", views2d.render_rafter_plan(elements, cfg)),
+        ("elev_front",   "Front elevation",            views2d.render_front(elements, cfg)),
+        ("elev_side",    "Side elevation",             views2d.render_side(elements, cfg)),
+        ("iso3d",        "Isometric 3D",               view3d.render_iso(elements, cfg)),
     ]
 
     # Timber-joint detail drawings (flush framing only) — how the members are

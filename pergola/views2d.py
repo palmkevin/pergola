@@ -143,6 +143,112 @@ def render_plan(elements: List[Box], cfg: Config):
     return fig
 
 
+# --------------------------------------------------------------------------- #
+#  Rafter-spacing plan (top view focused on the roof framing)
+# --------------------------------------------------------------------------- #
+def render_rafter_plan(elements: List[Box], cfg: Config):
+    """A top view focused on the roof framing, dimensioning the rafter layout:
+    the centre-to-centre (axis) spacing between the rafters and the gap from the
+    two outer rafters to the side beams (the perimeter ring's edge members)."""
+    fig, ax = _new_fig("Pergola — Sparrenabstände (Draufsicht)",
+                       "Sparren von oben · Achsmaße (Mitte–Mitte) und lichte Felder",
+                       cfg.units)
+    pg = cfg.pergola
+    ox, oy = pg.origin
+    w, d = pg.width, pg.depth
+
+    # Pergola framing only — skip surroundings, the ground, and the translucent
+    # roof pane (it spans the whole footprint and would hide the rafters here).
+    members = [b for b in elements
+               if b.category in ("post", "beam", "rafter", "gutter")]
+    _draw_boxes(ax, members, h=X, v=Y, nearness=lambda b: b.center[Z])
+
+    rafters = [b for b in elements if b.category == "rafter"]
+    if not rafters:
+        _set_limits(ax, ox, ox + w, oy, oy + d)
+        return fig
+
+    # Spacing axis s = the axis the rafters are distributed along; o = the axis
+    # they span. (Here rafters run in y, so they are spread along x: s = X.)
+    spread_x = max(b.center[X] for b in rafters) - min(b.center[X] for b in rafters)
+    spread_y = max(b.center[Y] for b in rafters) - min(b.center[Y] for b in rafters)
+    s = X if spread_x >= spread_y else Y
+    o = Y if s == X else X
+
+    rs = sorted(rafters, key=lambda b: b.center[s])
+    r_axis = [float(b.center[s]) for b in rs]
+    r_lo = [float(b.min[s]) for b in rs]
+    r_hi = [float(b.max[s]) for b in rs]
+
+    # The "edge beams" parallel to the rafters: ring members narrow along s.
+    edge = sorted((b for b in elements if b.category == "beam"
+                   and (b.max[s] - b.min[s]) < (b.max[o] - b.min[o])),
+                  key=lambda b: b.center[s])
+    if len(edge) >= 2:
+        left_axis, right_axis = float(edge[0].center[s]), float(edge[-1].center[s])
+        left_inner, right_inner = float(edge[0].max[s]), float(edge[-1].min[s])
+    else:  # no flanking beams — fall back to the footprint edges
+        left_axis = left_inner = (ox if s == X else oy)
+        right_axis = right_inner = (ox + w if s == X else oy + d)
+
+    blo, bhi = bounds(members)
+    lo_o = float(blo[o])
+    hi_o = float(bhi[o])
+    span_o = hi_o - lo_o
+
+    def dim(a, b, level, feat):
+        if s == X:
+            _hdim(ax, a, b, level, feat_y=feat)
+        else:
+            _vdim(ax, a, b, level, feat_x=feat)
+
+    # Axis chain (centre-to-centre) on the near/low side: side-beam axis through
+    # every rafter axis to the far side-beam axis -> 700 · 660 · 660 · 700.
+    axis_pts = [left_axis] + r_axis + [right_axis]
+    axis_level = lo_o - span_o * 0.18
+    for a, b in zip(axis_pts[:-1], axis_pts[1:]):
+        dim(a, b, axis_level, lo_o)
+
+    # Clear-field chain on the far/high side: side-beam inner face to rafter
+    # face, between rafters, then to the far inner face -> 630 · 600 · 600 · 630.
+    clear_pairs = ([(left_inner, r_lo[0])]
+                   + [(r_hi[i], r_lo[i + 1]) for i in range(len(rs) - 1)]
+                   + [(r_hi[-1], right_inner)])
+    clear_level = hi_o + span_o * 0.18
+    for a, b in clear_pairs:
+        dim(a, b, clear_level, hi_o)
+
+    # Light dashed centre lines through each rafter and the two edge beams, so
+    # the axis dimensions are easy to read back onto the framing.
+    for ax_pt in axis_pts:
+        if s == X:
+            ax.plot([ax_pt, ax_pt], [lo_o, hi_o], color=style.DIM_COLOR,
+                    lw=0.5, ls=(0, (4, 3)), alpha=0.5, zorder=15)
+        else:
+            ax.plot([lo_o, hi_o], [ax_pt, ax_pt], color=style.DIM_COLOR,
+                    lw=0.5, ls=(0, (4, 3)), alpha=0.5, zorder=15)
+
+    # Row captions so the two chains are unambiguous.
+    cen = (axis_pts[0] + axis_pts[-1]) / 2
+    if s == X:
+        ax.text(cen, axis_level - span_o * 0.07, "Achsabstand (Mitte–Mitte)",
+                ha="center", va="top", fontsize=style.LABEL_FONTSIZE,
+                color=style.DIM_COLOR, zorder=21)
+        ax.text(cen, clear_level + span_o * 0.07, "lichter Abstand (freies Feld)",
+                ha="center", va="bottom", fontsize=style.LABEL_FONTSIZE,
+                color=style.DIM_COLOR, zorder=21)
+    else:
+        ax.text(axis_level - span_o * 0.07, cen, "Achsabstand (Mitte–Mitte)",
+                ha="right", va="center", rotation=90,
+                fontsize=style.LABEL_FONTSIZE, color=style.DIM_COLOR, zorder=21)
+        ax.text(clear_level + span_o * 0.07, cen, "lichter Abstand (freies Feld)",
+                ha="left", va="center", rotation=90,
+                fontsize=style.LABEL_FONTSIZE, color=style.DIM_COLOR, zorder=21)
+
+    _set_limits(ax, blo[X], bhi[X], blo[Y], bhi[Y], pad_frac=0.30)
+    return fig
+
+
 def _north_arrow(ax, x, y, span, north_deg):
     """Small North arrow near the top-right; +y rotated by the compass bearing."""
     L = span * 0.06
