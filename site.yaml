@@ -94,15 +94,21 @@ pergola:
 
 surroundings:
   walls:
-    # PROVISIONAL (from site photos 2026-06-03, NOT measured): the pergola attaches
-    # to a low, single-storey white horizontally-clad building with an eave overhang
-    # — not a tall masonry house. Height set to a realistic single-storey placeholder
-    # (~2.8 m to the eave). CONFIRM with a real measurement: the building's eave
-    # height vs the pergola roof top (~2750 mm at the house side) decides whether the
-    # pergola tucks under the eave or needs to be lowered.
+    # The pergola attaches to the BOARD WALL of a Blockbohlen (log-cabin) garden
+    # house: horizontal boards 3 cm thick (-> wall thickness 30 mm, the `size` y).
+    # PROVISIONAL height (from site photos 2026-06-03, NOT measured): a low,
+    # single-storey building with an eave overhang — not a tall masonry house.
+    # Height is a realistic single-storey placeholder (~2.8 m to the eave). CONFIRM
+    # with a real measurement: the eave height vs the pergola roof top (~2750 mm at
+    # the house side) decides whether the pergola tucks under the eave or must drop.
+    #
+    # Length: the wall is only drawn as far as the pergola needs it. It ends 5 cm
+    # past the pergola's right edge (pergola right = x 2400, so wall right = 2450),
+    # but runs long to the LEFT (the steep-path side, x_min) where the beds and the
+    # ramp sit against it. Left edge -500, right edge 2450 -> width 2950.
     - name: Hauswand
       at: [-500, 2600]  # min corner (x, y) — the roof's back edge meets the wall here
-      size: [5000, 200] # (x, y) footprint of the wall
+      size: [2950, 30]  # (x, y) footprint: 30 mm board thickness, ends 5 cm past pergola
       height: 2800      # provisional single-storey eave height (was 6000 placeholder)
 
   # A sloping path on the LEFT of the pergola, running along x. You walk down it

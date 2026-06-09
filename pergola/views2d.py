@@ -305,6 +305,20 @@ def _render_elevation(elements, cfg: Config, *, h, v, nearness, title, subtitle,
     _vdim(ax, 0, pg.clear_height, ph0 + pspan + pspan * 0.10,
           feat_x=ph0 + pspan, text=_fmt(pg.clear_height))           # clear height
 
+    # Post height on the house-averted (low/front) side. The roof slopes down to
+    # the front, so the front posts are shorter than the clear_height held at the
+    # house side; that figure was missing from the elevations, so dimension it on
+    # the front (left) edge, just outboard of the overall-height line.
+    posts = [b for b in elements if b.category == "post"]
+    if posts:
+        fy = min(b.center[Y] for b in posts)
+        front_top = max(b.max[Z] for b in posts if abs(b.center[Y] - fy) < 1.0)
+        fx = ph0 - pspan * 0.22
+        _vdim(ax, 0, front_top, fx, feat_x=ph0, text=_fmt(front_top))
+        ax.text(fx - pspan * 0.035, front_top / 2, "Pfostenhöhe vorne",
+                ha="right", va="center", rotation=90,
+                fontsize=style.LABEL_FONTSIZE, color=style.DIM_COLOR, zorder=21)
+
     _set_limits(ax, lo[0], hi[0], min(lo[1], plo[Z]), hi[1])
     _scale_bar(ax, lo[0], min(lo[1], plo[Z]) - top * 0.06)
     return fig

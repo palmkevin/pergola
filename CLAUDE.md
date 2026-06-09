@@ -73,6 +73,12 @@ rafters, roof, clear_height), `surroundings.walls` / `surroundings.buildings` / 
 `size` + `rise` + `high_end`), `ground`. `model.py` validates it and raises `ConfigError` with
 specific, friendly messages — keep that style for new fields.
 
+The house wall the pergola attaches to (`surroundings.walls` → `Hauswand`) is the **board wall
+of a Blockbohlen (log-cabin) garden house** — the boards are **3 cm (30 mm) thick**, which is the
+modelled wall thickness (`size` y). The wall is only drawn as far as the pergola needs it: it ends
+**5 cm past the pergola** on the right, but runs long on the left (the steep-path side) where the
+beds and ramp sit against it.
+
 Notable `pergola` options: `posts.house_offset` (attached layout — front posts on the footprint
 corners, house-side posts pulled this far off the wall while the roof still spans to it);
 `posts.rows_y_from_wall` (a list of post-row centre distances from the house wall, one per
