@@ -92,7 +92,12 @@ flush *between* the front/back beams, tops aligned, so the roof covering rests o
 `roof.gutter` (rain gutter along the low front eave);
 `curtains` (optional fabric curtains hung on curtain rods strung between the corner posts — pick
 `sides` from `left`/`right`/`front`/`back`; each side adds a horizontal `rod` box between that
-side's two corner posts plus a hanging `curtain` fabric panel, drawn semi-transparent like glass).
+side's two corner posts plus a hanging `curtain` fabric panel, drawn semi-transparent like glass);
+`braces` (optional diagonal knee braces / Kopfbänder that triangulate the post heads for lateral
+stiffness — the bare post-beam frame is pin-jointed and would otherwise rack; each outer corner
+post gets a 45° strut up to the beam underside per requested `directions` entry: `x` braces sit in
+x-z planes (resist sway parallel to the wall), `y` braces in y-z planes (resist sway toward/away
+from the wall); `size` is the square section, `length` the 45° leg — built as `brace` `Prism`s).
 
 ## Layout
 

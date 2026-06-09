@@ -114,6 +114,11 @@ _HTML = Template(
       <dt>Rahmenring <span class="en">(perimeter beam ring)</span></dt>
       <dd>Der umlaufende Balkenrahmen (flush-Bauweise): die zwei Pfetten plus die zwei
           seitlichen Randbalken, die das Dach zu einer Ebene schließen.</dd>
+      <dt>Kopfband / Eckstrebe <span class="en">(knee brace)</span></dt>
+      <dd>Diagonale 45°-Strebe zwischen Pfosten und Balken, die die Ecke
+          dreieckig aussteift. Sie verhindert das seitliche Schwanken (racking)
+          des sonst gelenkigen Pfosten-Riegel-Rahmens und sichert so die
+          Standsicherheit.</dd>
       <dt>Traufe <span class="en">(eave)</span></dt>
       <dd>Die untere, vordere Dachkante, zu der das Dach abfällt; hier mit Regenrinne.</dd>
       <dt>Dachrinne <span class="en">(gutter)</span></dt>

@@ -54,6 +54,37 @@ def _slab(x0, x1, y0, y1, zb0, zb1, thickness, category):
     return Prism(corners_arr=c, category=category)
 
 
+def _brace(cx, cy, half, axis, sign, z_top, length, t) -> Prism:
+    """A 45° knee brace (Kopfband) in a vertical plane.
+
+    Its foot is fixed to the post face ``length`` below the beam underside and
+    its head meets the beam underside ``length`` inward, so the run down the
+    post equals the run along the beam (a 45° strut). ``axis`` picks the plane
+    (``x`` -> x-z, ``y`` -> y-z) and ``sign`` points toward the structure
+    interior; ``z_top`` is the beam underside where the head lands. Built as a
+    square-section (``t`` x ``t``) tilted :class:`Prism`."""
+    if axis == "x":
+        pf = cx + sign * half                       # post face toward the interior
+        a = np.array([pf, cy, z_top - length])      # foot, on the post
+        b = np.array([pf + sign * length, cy, z_top])  # head, at the beam underside
+        v = np.array([0.0, 1.0, 0.0])               # out-of-plane (thickness) dir
+    else:
+        pf = cy + sign * half
+        a = np.array([cx, pf, z_top - length])
+        b = np.array([cx, pf + sign * length, z_top])
+        v = np.array([1.0, 0.0, 0.0])
+    u = b - a
+    u = u / np.linalg.norm(u)                        # brace axis
+    p = np.cross(u, v)
+    p = p / np.linalg.norm(p)                        # in-plane perpendicular
+    hw = t / 2.0
+    corners = np.array([
+        a - hw * p - hw * v, a + hw * p - hw * v, a + hw * p + hw * v, a - hw * p + hw * v,
+        b - hw * p - hw * v, b + hw * p - hw * v, b + hw * p + hw * v, b - hw * p + hw * v,
+    ])
+    return Prism(corners_arr=corners, category="brace")
+
+
 def build_pergola(pg: Pergola) -> List[Box]:
     boxes: List[Box] = []
     ox, oy = pg.origin
@@ -216,6 +247,27 @@ def build_pergola(pg: Pergola) -> List[Box]:
             size=(w, g_depth, g_h),
             category="gutter",
         ))
+
+    # Diagonal knee braces (Kopfbänder) triangulating the post heads, for
+    # lateral (racking) stiffness. The bare post-beam frame is pin-jointed and
+    # would otherwise sway; each braced OUTER corner post gets a 45° strut up to
+    # the beam underside, pointing toward the structure interior. "x" braces sit
+    # in x-z planes (resist sway parallel to the wall); "y" braces in y-z planes
+    # (resist sway toward/away from the house). The house-side beam slopes, so
+    # the "y" head height is taken at the head's y position.
+    brc = pg.braces
+    if brc is not None:
+        for cx in (xs[0], xs[-1]):
+            sx = 1.0 if cx == xs[0] else -1.0
+            for cy in (ys[0], ys[-1]):
+                sy = 1.0 if cy == ys[0] else -1.0
+                if "x" in brc.directions:
+                    boxes.append(_brace(cx, cy, half_x, "x", sx,
+                                        underside(cy), brc.length, brc.size))
+                if "y" in brc.directions:
+                    y_head = cy + sy * (half_y + brc.length)
+                    boxes.append(_brace(cx, cy, half_y, "y", sy,
+                                        underside(y_head), brc.length, brc.size))
 
     # Fabric curtains on curtain rods, strung between the corner posts. Each
     # side gets one horizontal rod (attached to that side's two corner posts)

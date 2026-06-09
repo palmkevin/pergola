@@ -94,6 +94,22 @@ class Curtains:
 
 
 @dataclass
+class Braces:
+    """Diagonal knee braces (Kopfbänder) at the post heads that triangulate the
+    post-beam corners and give the otherwise pin-jointed frame its lateral
+    (racking) stiffness.
+
+    Each outer corner post gets a 45° strut running from the post face up to the
+    beam underside. ``directions`` selects the vertical plane(s) each corner is
+    braced in: ``x`` -> braces in x-z planes (resist sway *parallel* to the wall),
+    ``y`` -> braces in y-z planes (resist sway *toward/away* from the wall)."""
+
+    size: float            # square cross-section of the brace (mm)
+    length: float          # 45° leg length: run down the post == run along the beam
+    directions: List[str]  # subset of {"x", "y"}: which vertical planes to brace
+
+
+@dataclass
 class Pergola:
     type: str           # attached | freestanding
     origin: Tuple[float, float]
@@ -108,6 +124,7 @@ class Pergola:
     rafters: Rafters
     roof: Roof
     curtains: Optional[Curtains] = None
+    braces: Optional[Braces] = None
 
 
 @dataclass
@@ -305,6 +322,22 @@ def load_config(path: str) -> Config:
             overhang=L(cu.get("overhang", 40), "pergola.curtains.overhang"),
         )
 
+    braces = None
+    br = pg.get("braces")
+    if br:
+        if not isinstance(br, dict):
+            raise ConfigError("pergola.braces must be a mapping of options.")
+        raw_dirs = br.get("directions", ["x", "y"])
+        if not isinstance(raw_dirs, (list, tuple)) or not raw_dirs:
+            raise ConfigError(
+                "pergola.braces.directions must be a non-empty list of 'x'/'y'.")
+        directions = [_axis(d, "pergola.braces.directions") for d in raw_dirs]
+        braces = Braces(
+            size=L(br.get("size", 60), "pergola.braces.size", positive=True),
+            length=L(br.get("length", 400), "pergola.braces.length", positive=True),
+            directions=directions,
+        )
+
     pergola = Pergola(
         type=p_type,
         origin=P(pg.get("origin", [0, 0]), "pergola.origin"),
@@ -317,6 +350,7 @@ def load_config(path: str) -> Config:
         rafters=rafters,
         roof=roof,
         curtains=curtains,
+        braces=braces,
     )
 
     # --- surroundings ------------------------------------------------------ #

@@ -39,7 +39,8 @@ pergola:
 
   posts:
     # Available timber: 80 x 60 mm. Posts carry mostly axial load (tiny here), so
-    # the smaller section is fine; corner braces handle lateral sway.
+    # the smaller section is fine; the corner braces below (pergola.braces) take
+    # the lateral sway — without them the pin-jointed frame would rack.
     size: [80, 60]      # cross-section [x, y] (60 mm is the y-side referenced below)
     count_x: 2          # 2 x 2 = 4 posts
     count_y: 2
@@ -83,6 +84,19 @@ pergola:
       height: 20
     spacing: 100        # centre-to-centre between slats
     direction: x        # slats span along x
+
+  # Eckstreben / Kopfbänder zur Aussteifung. Der reine Pfosten-Riegel-Rahmen ist
+  # gelenkig und würde unter Wind seitlich schwanken (racking) — die Streben
+  # triangulieren die Ecken und machen ihn standsicher. Jede äußere Eckstütze
+  # bekommt je Richtung eine 45°-Strebe vom Pfosten hoch zur Balkenunterkante.
+  #   directions: [x] -> Streben in x-z-Ebenen (gegen Schwanken PARALLEL zur Wand)
+  #   directions: [y] -> Streben in y-z-Ebenen (gegen Schwanken ZUR/VON der Wand)
+  # Beide Richtungen = allseitig ausgesteift (empfohlen, solange die Hausseite
+  # nicht fest mit der Wand verschraubt ist).
+  braces:
+    size: 60            # quadratischer Querschnitt der Strebe (mm)
+    length: 400         # 45°-Schenkellänge (am Pfosten herunter = am Balken entlang)
+    directions: [x, y]  # in beiden vertikalen Ebenen aussteifen
 
   # Stoffgardinen an den beiden Seiten (links & rechts). Jede Seite bekommt eine
   # Gardinenstange, die zwischen ihren beiden Eckpfosten gespannt und an ihnen
