@@ -28,7 +28,10 @@ pergola:
                         # over the HOUSE-SIDE beam (25 cm off the wall), so the roof's
                         # back edge stops ~21 cm short of the wall. This depth is kept
                         # to the wall so the slope/clear_height reference is unchanged.
-  clear_height: 2400    # underside of the roof on the HIGH (house) side
+  clear_height: 2200    # underside of the roof on the HIGH (house) side. Sized so the
+                        # roof TOP on the house side stays under the 232 cm limit:
+                        # 2200 + beam 120 + glass 16 - slope drop (~22) = ~2314 mm
+                        # (231.4 cm) at the roof's house-side back edge.
   framing: flush        # "flush" = one-level roof: a perimeter beam ring with the
                         # rafters housed flush BETWEEN the front/back beams (tops
                         # aligned), so the roof is a single plane (no stacked layer).
@@ -99,7 +102,7 @@ surroundings:
     # PROVISIONAL height (from site photos 2026-06-03, NOT measured): a low,
     # single-storey building with an eave overhang — not a tall masonry house.
     # Height is a realistic single-storey placeholder (~2.8 m to the eave). CONFIRM
-    # with a real measurement: the eave height vs the pergola roof top (~2750 mm at
+    # with a real measurement: the eave height vs the pergola roof top (~2314 mm at
     # the house side) decides whether the pergola tucks under the eave or must drop.
     #
     # Length: the wall is only drawn as far as the pergola needs it. It ends 5 cm
