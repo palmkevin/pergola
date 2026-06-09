@@ -109,6 +109,14 @@ def build_pergola(pg: Pergola) -> List[Box]:
     # Beams sit on top of the posts.
     bm = pg.beams
     bh = bm.height
+    # The roof ends ABOVE the beams (no front/back overhang): the covering and the
+    # side beams span between the OUTER faces of the front and house-side beams,
+    # while the rafters are housed between their INNER faces. Both edges are derived
+    # from the post-row centres (ys), so moving a row moves its roof edge with it.
+    roof_y0 = ys[0] - bm.width / 2     # front beam, outer (front) face
+    roof_y1 = ys[-1] + bm.width / 2    # house-side beam, outer (house) face
+    raf_y0 = ys[0] + bm.width / 2      # front beam, inner face
+    raf_y1 = ys[-1] - bm.width / 2     # house-side beam, inner face
     if flush:
         # One-level frame: a full perimeter ring of beams. Front/back beams run
         # along x (horizontal, stepped to each row's underside); the left/right
@@ -121,8 +129,8 @@ def build_pergola(pg: Pergola) -> List[Box]:
                 category="beam",
             ))
         for cx in (xs[0], xs[-1]):
-            boxes.append(_slab(cx - bm.width / 2, cx + bm.width / 2, oy, oy + d,
-                               underside(oy), underside(oy + d), bh, "beam"))
+            boxes.append(_slab(cx - bm.width / 2, cx + bm.width / 2, roof_y0, roof_y1,
+                               underside(roof_y0), underside(roof_y1), bh, "beam"))
     elif bm.direction == "x":
         for cy in ys:
             boxes.append(Box(
@@ -132,13 +140,14 @@ def build_pergola(pg: Pergola) -> List[Box]:
             ))
     else:  # beams along y -> they follow the slope, so build as slabs
         for cx in xs:
-            boxes.append(_slab(cx - bm.width / 2, cx + bm.width / 2, oy, oy + d,
-                               underside(oy), underside(oy + d), bh, "beam"))
+            boxes.append(_slab(cx - bm.width / 2, cx + bm.width / 2, roof_y0, roof_y1,
+                               underside(roof_y0), underside(roof_y1), bh, "beam"))
 
-    # Rafters laid across the beams; they span the full depth to the wall and
-    # follow the roof slope. Stacked framing rests them ON TOP of the beams;
-    # flush framing houses them BETWEEN the perimeter beams with tops aligned
-    # (rafter underside is then rh below the beam top), giving one roof plane.
+    # Rafters laid across the beams; they span the roof (no overhang past the
+    # beams) and follow the roof slope. Stacked framing rests them ON TOP of the
+    # beams and runs them out to the roof edge (the beam outer faces); flush
+    # framing houses them BETWEEN the perimeter beams with tops aligned (rafter
+    # underside is then rh below the beam top), giving one roof plane.
     rf = pg.rafters
     rh = rf.height
     rb = (bh - rh) if flush else bh    # rafter underside, measured above the post top
@@ -152,15 +161,17 @@ def build_pergola(pg: Pergola) -> List[Box]:
             hi = xs[-1] - bm.width / 2     # inner face of the right side beam
             n = max(1, int(round((hi - lo) / rf.spacing)) - 1)   # interior rafters
             centers = lo + (hi - lo) * np.arange(1, n + 1) / (n + 1)
+            ry0, ry1 = raf_y0, raf_y1      # housed between the front/back beams
         else:
             n = _count_by_spacing(w - rf.width, rf.spacing)
             centers = _linspace_centers(ox + rf.width / 2, w - rf.width, n)
+            ry0, ry1 = roof_y0, roof_y1    # rest on top, out to the roof edge
         for cx in centers:
-            boxes.append(_slab(cx - rf.width / 2, cx + rf.width / 2, oy, oy + d,
-                               underside(oy) + rb, underside(oy + d) + rb,
+            boxes.append(_slab(cx - rf.width / 2, cx + rf.width / 2, ry0, ry1,
+                               underside(ry0) + rb, underside(ry1) + rb,
                                rh, "rafter"))
     else:  # rafters along x -> horizontal, one per row, stepped in z
-        a, b = (ys[0] + bm.width / 2, ys[-1] - bm.width / 2) if flush else (oy, oy + d)
+        a, b = (raf_y0, raf_y1) if flush else (roof_y0, roof_y1)
         n = _count_by_spacing((b - a) - rf.width, rf.spacing)
         for cy in _linspace_centers(a + rf.width / 2, (b - a) - rf.width, n):
             boxes.append(Box(
@@ -177,13 +188,14 @@ def build_pergola(pg: Pergola) -> List[Box]:
         return underside(y) + bh + (0.0 if flush else rh)
 
     if roof.kind == "glass":
-        boxes.append(_slab(ox, ox + w, oy, oy + d,
-                           roof_base(oy), roof_base(oy + d), roof.thickness, "glass"))
+        boxes.append(_slab(ox, ox + w, roof_y0, roof_y1,
+                           roof_base(roof_y0), roof_base(roof_y1), roof.thickness, "glass"))
     elif roof.kind != "open":
         sw, sh = roof.slat_width, roof.slat_height
         if roof.direction == "x":  # slats run along x at stepped heights
-            n = _count_by_spacing(d - sw, roof.spacing)
-            for cy in _linspace_centers(oy + sw / 2, d - sw, n):
+            span_y = roof_y1 - roof_y0
+            n = _count_by_spacing(span_y - sw, roof.spacing)
+            for cy in _linspace_centers(roof_y0 + sw / 2, span_y - sw, n):
                 boxes.append(Box(
                     pos=(ox, cy - sw / 2, roof_base(cy)),
                     size=(w, sw, sh),
@@ -192,15 +204,15 @@ def build_pergola(pg: Pergola) -> List[Box]:
         else:  # slats run along y -> tilted slabs
             n = _count_by_spacing(w - sw, roof.spacing)
             for cx in _linspace_centers(ox + sw / 2, w - sw, n):
-                boxes.append(_slab(cx - sw / 2, cx + sw / 2, oy, oy + d,
-                                   roof_base(oy), roof_base(oy + d), sh, "slat"))
+                boxes.append(_slab(cx - sw / 2, cx + sw / 2, roof_y0, roof_y1,
+                                   roof_base(roof_y0), roof_base(roof_y1), sh, "slat"))
 
     # Rain gutter along the low (front) eave, just outboard of the front edge.
     if roof.gutter:
         g_depth, g_h = 120.0, 90.0
-        eave_top = roof_base(oy)                # underside of the roof at the front
+        eave_top = roof_base(roof_y0)           # underside of the roof at the front
         boxes.append(Box(
-            pos=(ox, oy - g_depth, eave_top - g_h),
+            pos=(ox, roof_y0 - g_depth, eave_top - g_h),
             size=(w, g_depth, g_h),
             category="gutter",
         ))
