@@ -63,11 +63,11 @@ pergola:
     # house-side post row stands flush ON it (front post face = step front edge),
     # so those posts need no dug footing — the step is their foundation. It rises
     # 175 mm and projects 145 mm out from the wall; it runs the full wall length
-    # (x -500 .. 1630, matching the Hauswand) along the wall base.
+    # (x -500 .. 2450, matching the Hauswand) along the wall base.
     house_step:
       height: 175       # step height (17.5 cm) — posts start at z = 175 on top
       depth: 145        # step depth out from the wall (14.5 cm)
-      x_extent: [-500, 1630]  # left .. right ends along x (full house-wall length)
+      x_extent: [-500, 2450]  # left .. right ends along x (full house-wall length)
 
   beams:                # the perimeter frame ring (flush framing builds all 4 sides)
     # Available timber: 120 x 80 mm, set on edge (120 = height) for stiffness — the
