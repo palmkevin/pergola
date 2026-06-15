@@ -123,17 +123,39 @@ def build_pergola(pg: Pergola) -> List[Box]:
     else:
         ys = _linspace_centers(oy + half_y, d - ps.size_y, ps.count_y)
 
+    # Foundation step along the house wall (optional). Its back face sits at the
+    # wall front face (= the footprint back edge, oy + d) and it projects out
+    # toward the pergola by `depth`. The house-side post row (nearest the wall,
+    # the largest-y row) stands flush ON this step instead of on a dug footing.
+    step = ps.house_step
+    house_cy = ys[-1]
+    if step is not None:
+        sy1 = oy + d                         # wall front face = footprint back edge
+        sy0 = sy1 - step.depth               # front edge of the step
+        boxes.append(Box(
+            pos=(step.x0, sy0, 0.0),
+            size=(step.x1 - step.x0, step.depth, step.height),
+            category="step",
+            label="Stufe",
+        ))
+
     # Footings + posts at each grid node. Post tops follow the sloped underside.
+    # A house-side post that lands on the step gets no footing and starts at the
+    # step top (z = step.height) — the step is its foundation.
     for cx in xs:
         for cy in ys:
+            on_step = (step is not None and cy == house_cy
+                       and step.x0 <= cx <= step.x1)
+            base = step.height if on_step else 0.0
+            if not on_step:
+                boxes.append(Box(
+                    pos=(cx - ps.footing.size / 2, cy - ps.footing.size / 2, -ps.footing.depth),
+                    size=(ps.footing.size, ps.footing.size, ps.footing.depth),
+                    category="footing",
+                ))
             boxes.append(Box(
-                pos=(cx - ps.footing.size / 2, cy - ps.footing.size / 2, -ps.footing.depth),
-                size=(ps.footing.size, ps.footing.size, ps.footing.depth),
-                category="footing",
-            ))
-            boxes.append(Box(
-                pos=(cx - half_x, cy - half_y, 0.0),
-                size=(ps.size_x, ps.size_y, underside(cy)),
+                pos=(cx - half_x, cy - half_y, base),
+                size=(ps.size_x, ps.size_y, underside(cy) - base),
                 category="post",
             ))
 
