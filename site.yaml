@@ -18,20 +18,21 @@ site:
 
 pergola:
   type: attached        # "attached" (against a wall) or "freestanding"
-  origin: [0, 730]      # near-left (min x, min y) corner of the footprint. y starts
+  origin: [0, 450]      # near-left (min x, min y) corner of the footprint. y starts
                         # at the FRONT roof edge (= the front beam's outer face), since
                         # the roof no longer overhangs the posts (see footprint.depth).
   footprint:
-    width: 2400         # x extent  (240 cm, along the house wall)  — outer roof edge
-    depth: 1870         # y extent: front roof edge (= front beam) .. house wall. The
+    width: 1580         # x extent  (158 cm, along the house wall) = post-to-post outer
+                        # span (posts sit flush at the side edges, so NO side overhang)
+    depth: 2150         # y extent: front roof edge (= front beam) .. house wall. The
                         # roof itself does NOT span this whole depth any more — it ends
                         # over the HOUSE-SIDE beam (25 cm off the wall), so the roof's
                         # back edge stops ~21 cm short of the wall. This depth is kept
                         # to the wall so the slope/clear_height reference is unchanged.
-  clear_height: 2200    # underside of the roof on the HIGH (house) side. Sized so the
-                        # roof TOP on the house side stays under the 232 cm limit:
-                        # 2200 + beam 120 + glass 16 - slope drop (~22) = ~2314 mm
-                        # (231.4 cm) at the roof's house-side back edge.
+  clear_height: 2106    # underside of the roof on the HIGH (house) side. Sized so the
+                        # roof TOP at the house wall = 222 cm including the covering:
+                        # 2106 + beam 120 + glass 16 - slope drop (~22) = ~2220 mm
+                        # (222.0 cm) at the roof's house-side back edge.
   framing: flush        # "flush" = one-level roof: a perimeter beam ring with the
                         # rafters housed flush BETWEEN the front/back beams (tops
                         # aligned), so the roof is a single plane (no stacked layer).
@@ -46,11 +47,13 @@ pergola:
     count_y: 2
     # In x (along the wall) the posts sit at the very edges: their outer faces are
     # flush with the roof's side edges, so there is NO side overhang (the roof
-    # width = the post-to-post outer span). In y there is now NO overhang either:
-    # the roof ends right over each beam (front and house side). Measured centres
-    # of the 60 mm post from the house wall: house side 250 mm (= the house-side
-    # beam, 25 cm off the wall), outer (front) row 1830 mm (unchanged).
-    rows_y_from_wall: [250, 1830]   # post-row centre distances from the house wall
+    # width = the post-to-post outer span = 158 cm). In y there is now NO overhang
+    # either: the roof ends right over each beam (front and house side). Measured
+    # centres of the 60 mm post from the house wall: house side 250 mm (= the
+    # house-side beam, 25 cm off the wall), front row 2110 mm. Centre-to-centre is
+    # then 1860 mm, so the CLEAR inner gap between the post rows in y is
+    # 1860 - 60 = 1800 mm (180 cm).
+    rows_y_from_wall: [250, 2110]   # post-row centre distances from the house wall
     footing:
       size: 300         # square concrete footing under each post
       depth: 600        # how deep below ground
@@ -69,7 +72,7 @@ pergola:
     spacing: 660        # target clear field between supports. With flush framing the
                         # two side beams act as the outer supports and the rafters are
                         # spread evenly across the bay between them (here, across the
-                        # 2400 mm width: 2 interior rafters, ~750 mm fields) — well within
+                        # 1580 mm width: 1 interior rafter, ~710 mm fields) — well within
                         # the 16 mm twin-wall sheet's allowable bar spacing (~1000 mm).
     direction: y        # rafters span along y (down the slope)
 
@@ -116,16 +119,16 @@ surroundings:
     # PROVISIONAL height (from site photos 2026-06-03, NOT measured): a low,
     # single-storey building with an eave overhang — not a tall masonry house.
     # Height is a realistic single-storey placeholder (~2.8 m to the eave). CONFIRM
-    # with a real measurement: the eave height vs the pergola roof top (~2314 mm at
+    # with a real measurement: the eave height vs the pergola roof top (~2220 mm at
     # the house side) decides whether the pergola tucks under the eave or must drop.
     #
     # Length: the wall is only drawn as far as the pergola needs it. It ends 5 cm
-    # past the pergola's right edge (pergola right = x 2400, so wall right = 2450),
+    # past the pergola's right edge (pergola right = x 1580, so wall right = 1630),
     # but runs long to the LEFT (the steep-path side, x_min) where the beds and the
-    # ramp sit against it. Left edge -500, right edge 2450 -> width 2950.
+    # ramp sit against it. Left edge -500, right edge 1630 -> width 2130.
     - name: Hauswand
       at: [-500, 2600]  # min corner (x, y) — the roof's back edge meets the wall here
-      size: [2950, 30]  # (x, y) footprint: 30 mm board thickness, ends 5 cm past pergola
+      size: [2130, 30]  # (x, y) footprint: 30 mm board thickness, ends 5 cm past pergola
       height: 2800      # provisional single-storey eave height (was 6000 placeholder)
 
   # A sloping path on the LEFT of the pergola, running along x. You walk down it
