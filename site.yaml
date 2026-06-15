@@ -30,10 +30,15 @@ pergola:
                         # (house-side post centre 11.5 cm off the wall), so the roof's
                         # back edge stops ~7.5 cm short of the wall. This depth is kept
                         # to the wall so the slope/clear_height reference is unchanged.
-  clear_height: 2106    # underside of the roof on the HIGH (house) side. Sized so the
-                        # roof TOP at the house wall = 222 cm including the covering:
-                        # 2106 + beam 120 + glass 16 - slope drop (~22) = ~2220 mm
-                        # (222.0 cm) at the roof's house-side back edge.
+  clear_height: 2101    # underside of the roof on the HIGH (house) side. Sized so the
+                        # roof's HIGHEST point = exactly 222 cm including the covering.
+                        # That highest point is the panel back (house-side) edge at
+                        # roof_y1 = 2525 mm, i.e. 7.5 cm IN FRONT of the wall (the roof
+                        # stops over the house-side beam, it does not reach the wall),
+                        # so the slope drop from the clear_height reference (the wall,
+                        # y = 2600) to that edge is only (2600-2525)*tan(5deg) ~ 6.6 mm:
+                        # 2101 + beam 120 + panel 6 - 6.6 = 2220 mm (222.0 cm).
+                        # Recompute this whenever roof.tilt_deg or roof.thickness change.
   framing: flush        # "flush" = one-level roof: a perimeter beam ring with the
                         # rafters housed flush BETWEEN the front/back beams (tops
                         # aligned), so the roof is a single plane (no stacked layer).
@@ -84,13 +89,19 @@ pergola:
                         # two side beams act as the outer supports and the rafters are
                         # spread evenly across the bay between them (here, across the
                         # 2400 mm width: 2 interior rafters, ~747 mm fields) — well within
-                        # the 16 mm twin-wall sheet's allowable bar spacing (~1000 mm).
+                        # a 6 mm solid PVC sheet's allowable support spacing (~900 mm).
     direction: y        # rafters span along y (down the slope)
 
   roof:
-    kind: glass         # translucent panel representation (here: acrylic twin-wall sheet)
-    thickness: 16       # Gutta Acryl-Hohlkammerplatte 32/16, 3000 x 980 x 16 mm
-    tilt_deg: 6         # pitch: slopes DOWN toward the front, to shed rain/snow
+    kind: glass         # rigid translucent panel representation (here: a SOLID sheet)
+    thickness: 6        # massive PVC-Platte (solid PVC sheet, 6 mm). A solid sheet, not
+                        # a twin-wall/Hohlkammer panel. 6 mm spans the ~747 mm rafter
+                        # field comfortably (solid sheets allow ~900 mm at 6 mm).
+    tilt_deg: 5         # pitch: slopes DOWN toward the front, to shed rain/snow. 5 deg
+                        # is the practical MINIMUM for solid PVC/PC/acrylic panels
+                        # (manufacturers: >=5 deg ~ 9 %; 7-15 deg gives better self-
+                        # cleaning/drainage). Do NOT go below 5 deg with a solid panel:
+                        # standing water, dirt and leak risk. (Was 6 deg.)
     gutter: true        # rain gutter along the low (front, house-away) eave
     # The fields below only apply to louvered/slatted roofs:
     slat:
