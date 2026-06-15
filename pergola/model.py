@@ -30,6 +30,22 @@ class Footing:
 
 
 @dataclass
+class HouseStep:
+    """A foundation step/ledge running along the house wall at its base.
+
+    The house-side post row stands flush on this step instead of on a dug
+    concrete footing — the step *is* their foundation. It spans ``[x0, x1]``
+    along the wall (x), projects ``depth`` out from the wall front face (toward
+    the pergola, in -y) and rises ``height`` above the ground (z = 0); the
+    house-side posts start at z = ``height`` (on top of it)."""
+
+    height: float       # z height of the step (posts rest on top)
+    depth: float        # y depth, projecting out from the wall front face
+    x0: float           # left end along x
+    x1: float           # right end along x
+
+
+@dataclass
 class Posts:
     size_x: float       # post cross-section along x
     size_y: float       # post cross-section along y (equal to size_x for a square post)
@@ -46,6 +62,9 @@ class Posts:
     # so the roof can overhang the post ring on BOTH the front and house sides.
     # Takes precedence over house_offset. None -> use house_offset / even layout.
     rows_y_from_wall: Optional[List[float]] = None
+    # Foundation step along the house wall: when set, the house-side post row
+    # (the row nearest the wall) stands on this step rather than on dug footings.
+    house_step: Optional["HouseStep"] = None
 
 
 @dataclass
@@ -237,6 +256,27 @@ def load_config(path: str) -> Config:
                 f"value(s) (one centre distance from the wall per row), got {rows_raw!r}.")
         rows_y_from_wall = [
             L(v, "pergola.posts.rows_y_from_wall", positive=True) for v in rows_raw]
+    # Foundation step along the house wall (optional). The house-side post row
+    # stands flush on it instead of on dug footings.
+    hs_raw = po.get("house_step")
+    house_step = None
+    if hs_raw is not None:
+        if not isinstance(hs_raw, dict):
+            raise ConfigError("pergola.posts.house_step must be a mapping of options.")
+        sx0, sx1 = P(_require(hs_raw, "x_extent", "pergola.posts.house_step"),
+                     "pergola.posts.house_step.x_extent")
+        if sx1 <= sx0:
+            raise ConfigError(
+                "pergola.posts.house_step.x_extent must be [x0, x1] with x1 > x0, "
+                f"got {[sx0, sx1]!r}.")
+        house_step = HouseStep(
+            height=L(_require(hs_raw, "height", "pergola.posts.house_step"),
+                     "pergola.posts.house_step.height", positive=True),
+            depth=L(_require(hs_raw, "depth", "pergola.posts.house_step"),
+                    "pergola.posts.house_step.depth", positive=True),
+            x0=sx0,
+            x1=sx1,
+        )
     # size: a single number (square post) or a [x, y] pair (rectangular post).
     raw_size = _require(po, "size", "pergola.posts")
     if isinstance(raw_size, (list, tuple)):
@@ -257,6 +297,7 @@ def load_config(path: str) -> Config:
         house_offset=(L(house_offset, "pergola.posts.house_offset", positive=True)
                       if house_offset is not None else None),
         rows_y_from_wall=rows_y_from_wall,
+        house_step=house_step,
     )
 
     be = _require(pg, "beams", "pergola")

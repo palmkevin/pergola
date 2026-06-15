@@ -7,6 +7,7 @@ from __future__ import annotations
 # facecolor, edgecolor for each element category.
 CATEGORY_STYLE = {
     "footing":  {"face": "#d9d2c5", "edge": "#9a8f7a"},
+    "step":     {"face": "#bdb8ad", "edge": "#857c6b"},
     "post":     {"face": "#b07d52", "edge": "#5c3d23"},
     "beam":     {"face": "#caa06e", "edge": "#5c3d23"},
     "rafter":   {"face": "#dcb887", "edge": "#6b4a2b"},
@@ -32,6 +33,7 @@ ALPHA = {"glass": 0.40, "curtain": 0.55}
 CATEGORY_ZORDER = {
     "footing": 0,
     "path": 0,
+    "step": 1,
     "bed": 1,
     "wall": 1,
     "building": 1,
