@@ -45,6 +45,18 @@ _HTML = Template(
   .section-head { padding: 4px 4px 0; }
   .section-head h2 { margin: 18px 0 2px; font-size: 18px; }
   .section-head p { margin: 0 0 4px; color: #666; font-size: 14px; max-width: 60em; }
+  .materials { padding: 0; overflow-x: auto; }
+  .materials table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  .materials caption { padding: 10px 16px; font-weight: 600; text-align: left;
+                       border-bottom: 1px solid #eee; }
+  .materials th, .materials td { padding: 7px 16px; text-align: left;
+                                 border-bottom: 1px solid #f0ece2; }
+  .materials th { background: #faf8f3; font-weight: 600; color: #555; }
+  .materials td.num, .materials th.num { text-align: right;
+                                         font-variant-numeric: tabular-nums; }
+  .materials tfoot td { font-weight: 600; border-top: 2px solid #e2ddd2; }
+  .materials .hint { padding: 10px 16px 14px; color: #666; font-size: 13px;
+                     max-width: 70em; }
   figcaption .note { display: block; font-weight: 400; color: #555; font-size: 13px;
                      margin-top: 4px; max-width: 70em; }
   footer { padding: 16px 32px 40px; color: #999; font-size: 12px; }
@@ -90,6 +102,51 @@ _HTML = Template(
     <img src="{{ img }}" alt="{{ title }}">
   </figure>
   {% endfor %}
+  {% endif %}
+  {% if materials and materials.rows %}
+  <figure class="materials">
+    <table>
+      <caption>Materialliste / bill of materials</caption>
+      <thead>
+        <tr>
+          <th>Bauteil</th>
+          <th>Material</th>
+          <th>Abmessungen B × H × L (mm)</th>
+          <th class="num">Anzahl</th>
+          <th class="num">Menge</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in materials.rows %}
+        <tr>
+          <td>{{ r.label }}</td>
+          <td>{{ r.material }}</td>
+          <td>{{ r.dims }}</td>
+          <td class="num">{{ r.qty }}</td>
+          <td class="num">{{ "%g"|format(r.amount) }} {{ r.unit }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      {% if materials.totals %}
+      <tfoot>
+        {% for t in materials.totals %}
+        <tr>
+          <td colspan="4">Summe {{ t.material }}</td>
+          <td class="num">{{ "%g"|format(t.amount) }} {{ t.unit }}</td>
+        </tr>
+        {% endfor %}
+      </tfoot>
+      {% endif %}
+    </table>
+    <p class="hint">Automatisch aus dem 3D-Modell abgeleitet. <b>Abmessungen</b>
+       aufsteigend: erst der Querschnitt (B × H bzw. Plattendicke), dann die
+       <b>Länge</b> — bei Sparren und Kopfbändern die echte schräge bzw.
+       45°-Länge. <b>Menge</b>: bei Holz/Metall die laufenden Meter (lfm), bei
+       Beton das Volumen (m³), bei Platte/Stoff die Fläche (m²). Die Längen sind
+       Nennlängen der Hölzer im Modell (sie durchdringen sich an den Stößen);
+       für Überblattungen/Verschnitt etwas Zugabe einplanen. Hauswand, Beete und
+       Pfad gehören zum Bestand und sind nicht aufgeführt.</p>
+  </figure>
   {% endif %}
   <figure class="glossary">
     <figcaption>Bauteil-Wortschatz / glossary of parts</figcaption>
@@ -164,11 +221,14 @@ def _versioned(path: str) -> str:
 
 def write_outputs(views: List[Tuple[str, str, "Figure"]], outdir: str,
                   config_name: str, units: str, model_paths: dict | None = None,
-                  details: List[Tuple[str, str, "Figure", str]] | None = None) -> dict:
+                  details: List[Tuple[str, str, "Figure", str]] | None = None,
+                  materials: dict | None = None) -> dict:
     """``views`` = list of (key, title, figure). ``details`` = optional list of
     (key, title, figure, html_note) timber-joint detail drawings shown in their
     own HTML section and appended to the PDF. ``model_paths`` = optional dict of
-    3D-model files ({step, stl, glb}) to embed/link in the HTML. Returns paths."""
+    3D-model files ({step, stl, glb}) to embed/link in the HTML. ``materials`` =
+    optional bill-of-materials dict ({rows, totals}) rendered as an HTML table.
+    Returns paths."""
     os.makedirs(outdir, exist_ok=True)
     details = details or []
     png_entries = []      # (title, versioned URL)
@@ -208,7 +268,8 @@ def write_outputs(views: List[Tuple[str, str, "Figure"]], outdir: str,
         fh.write(_HTML.render(views=png_entries, details=detail_entries,
                               config_name=config_name,
                               units=units, pdf_name=_versioned(pdf_path),
-                              model_glb=glb_name, downloads=downloads))
+                              model_glb=glb_name, downloads=downloads,
+                              materials=materials))
 
     return {
         "pdf": pdf_path,
