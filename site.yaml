@@ -109,6 +109,21 @@ pergola:
     join_profile:       # connecting H-Profil over each interior panel joint
       width: 50         # profile width across x (straddles the joint, screwed to the rafter)
       material: Aluminium   # alu glazing bar (standard for solid sheets; could be PVC)
+    edge_profile:       # closure profile along the two SIDE edges (left/right), clamping
+                        # each outer panel edge onto the side beam. The front edge drains
+                        # into the gutter and the house edge is a wall flashing, so only
+                        # the two longitudinal sides get one. (Solid sheets need NO open-
+                        # chamber U-profiles — there are no chambers, unlike Hohlkammer.)
+      width: 40         # profile width across x at each side edge
+      material: Aluminium
+    # THERMAL EXPANSION (not a geometry change, a fitting detail): solid PVC moves
+    # ~0.07 mm/m/K — about 4 mm across each 800 mm panel and ~11 mm over the 2.08 m
+    # length across a ~75 K summer/winter swing. The 3 x 800 = 2400 here is the COLD
+    # nominal (= structure width); the play lives in the profiles, NOT the panel
+    # widths: use oversized screw holes (+3-4 mm) with EPDM washers, don't push the
+    # panels fully home in the profile channels (~3-5 mm/m gap), and let the eave
+    # oversail freely into the gutter. Often the panels are ordered ~3-5 mm under
+    # 800 so the gap is guaranteed; the profiles cover it.
     tilt_deg: 5         # pitch: slopes DOWN toward the front, to shed rain/snow. 5 deg
                         # is the practical MINIMUM for solid PVC/PC/acrylic panels
                         # (manufacturers: >=5 deg ~ 9 %; 7-15 deg gives better self-

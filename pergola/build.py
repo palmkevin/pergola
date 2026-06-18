@@ -275,6 +275,16 @@ def build_pergola(pg: Pergola) -> List[Box]:
             boxes.append(_slab(jx - pw / 2, jx + pw / 2, roof_y0, roof_y1,
                                roof_base(roof_y0), roof_base(roof_y1),
                                cap, "profile", material=jmat))
+        # Edge/closure profiles along the two side roof edges, clamping each
+        # outer panel edge onto the side beam (the front edge drains into the
+        # gutter and the house edge is a wall flashing, so only the sides get one).
+        if roof.edge_profile_width is not None:
+            ew = roof.edge_profile_width
+            emat = roof.edge_profile_material or ""
+            for ex0 in (ox, ox + w - ew):
+                boxes.append(_slab(ex0, ex0 + ew, roof_y0, roof_y1,
+                                   roof_base(roof_y0), roof_base(roof_y1),
+                                   cap, "edge_profile", material=emat))
     elif roof.kind != "open":
         sw, sh = roof.slat_width, roof.slat_height
         if roof.direction == "x":  # slats run along x at stepped heights

@@ -15,6 +15,7 @@ CATEGORY_STYLE = {
     "slat":     {"face": "#e8d2ab", "edge": "#7a5a34"},
     "glass":    {"face": "#bfe0ee", "edge": "#6f9fb5"},
     "profile":  {"face": "#c9cfd4", "edge": "#7d848a"},
+    "edge_profile": {"face": "#b9c0c6", "edge": "#71787e"},
     "gutter":   {"face": "#9aa3a8", "edge": "#5d666b"},
     "rod":      {"face": "#6e7377", "edge": "#43484b"},
     "curtain":  {"face": "#e7ddc9", "edge": "#c7bba0"},
@@ -46,6 +47,7 @@ CATEGORY_ZORDER = {
     "slat": 5,
     "glass": 6,
     "profile": 7,    # H-Profil seam: sits over the panel joints, drawn on top
+    "edge_profile": 7,  # side-edge closure profile, also drawn over the panels
     "gutter": 6,
     "rod": 8,
 }
