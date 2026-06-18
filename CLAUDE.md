@@ -145,6 +145,12 @@ the real material in a `site.yaml` comment. Glass is rendered translucent everyw
 (`style.ALPHA`); the sample uses it. `roof.tilt_deg` gives a mono-pitch:
 members spanning the slope direction (rafters/glass with `direction: y`) become tilted `Prism`s,
 while cross-members stay stepped boxes. `roof.gutter` adds a box gutter at the low front eave.
+`roof.material` names the cover for the Materialliste (e.g. `PVC`). `roof.panel_width` panelises a
+`glass` cover into equal panels ~that wide across x (e.g. 800 → 3 × 800 mm on a 2400 wide roof):
+the rafters are then placed UNDER each interior joint (so a joint never floats between supports) and
+each joint gets a connecting H-Profil (`roof.join_profile.width`/`material`, a new `profile`
+element). Panels and profiles carry a per-box `material` (on `Box`/`Prism`) that overrides the
+category default in `materials.py`. Omit `panel_width` for one continuous pane (old behaviour).
 
 ## The 3D view
 

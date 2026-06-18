@@ -14,6 +14,7 @@ CATEGORY_STYLE = {
     "brace":    {"face": "#a9763f", "edge": "#4f3318"},
     "slat":     {"face": "#e8d2ab", "edge": "#7a5a34"},
     "glass":    {"face": "#bfe0ee", "edge": "#6f9fb5"},
+    "profile":  {"face": "#c9cfd4", "edge": "#7d848a"},
     "gutter":   {"face": "#9aa3a8", "edge": "#5d666b"},
     "rod":      {"face": "#6e7377", "edge": "#43484b"},
     "curtain":  {"face": "#e7ddc9", "edge": "#c7bba0"},
@@ -44,8 +45,9 @@ CATEGORY_ZORDER = {
     "beam": 3,
     "slat": 5,
     "glass": 6,
+    "profile": 7,    # H-Profil seam: sits over the panel joints, drawn on top
     "gutter": 6,
-    "rod": 7,
+    "rod": 8,
 }
 
 EDGE_WIDTH = 0.6

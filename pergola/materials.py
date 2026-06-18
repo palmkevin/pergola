@@ -33,6 +33,7 @@ _MATERIAL = {
     "footing": ("Fundament", "Beton", "volume"),
     "step":    ("Fundamentstufe", "Beton", "volume"),
     "glass":   ("Dachplatte", "Glas / PVC-Platte", "area"),
+    "profile": ("Verbindungsprofil (H-Profil)", "Aluminium", "length"),
     "gutter":  ("Dachrinne", "Blech / Zink", "length"),
     "rod":     ("Gardinenstange", "Metall / Holz", "length"),
     "curtain": ("Gardine", "Stoff", "area"),
@@ -40,7 +41,7 @@ _MATERIAL = {
 
 # Display order of the rows.
 _ORDER = ["footing", "step", "post", "beam", "rafter", "slat",
-          "glass", "gutter", "brace", "rod", "curtain"]
+          "glass", "profile", "gutter", "brace", "rod", "curtain"]
 
 # Unit label per metric kind.
 _UNIT = {"length": "lfm (m)", "volume": "m³", "area": "m²"}
@@ -75,8 +76,9 @@ def summarize(elements) -> dict:
         if info is None:
             continue                            # surroundings etc.: not material
         label, material, kind = info
+        material = getattr(el, "material", "") or material   # per-box override wins
         d0, d1, d2 = (round(d) for d in _dims_mm(el))
-        key = (el.category, d0, d1, d2)
+        key = (el.category, material, d0, d1, d2)
         if key in groups:
             groups[key][0] += 1
         else:
@@ -85,8 +87,8 @@ def summarize(elements) -> dict:
     rows = []
     totals: dict = {}                           # metric kind -> [value, unit]
     # Sort by display order (by category), then longest member first.
-    for key in sorted(groups, key=lambda k: (_ORDER.index(k[0]), -k[3])):
-        category, _d0, _d1, _d2 = key
+    for key in sorted(groups, key=lambda k: (_ORDER.index(k[0]), -k[4])):
+        category, _material, _d0, _d1, _d2 = key
         qty, label, material, kind, d0, d1, d2 = groups[key]
         per = _metric_value(kind, d0, d1, d2)
         total = per * qty

@@ -52,6 +52,9 @@ class Box:
     size: Tuple[float, float, float]  # extent along (x, y, z)
     category: str                     # post | beam | rafter | slat | footing | wall | building
     label: str = ""
+    material: str = ""                # optional material override for the Materialliste
+                                      # (e.g. "PVC" panel, "Aluminium" profile); blank
+                                      # -> use the category's default material
 
     # --- convenience accessors -------------------------------------------------
     @property
@@ -134,6 +137,7 @@ class Prism:
     corners_arr: np.ndarray            # (8, 3) corner points (mm)
     category: str
     label: str = ""
+    material: str = ""                 # optional material override (see Box.material)
 
     @property
     def min(self) -> np.ndarray:

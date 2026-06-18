@@ -93,6 +93,15 @@ class Roof:
     tilt_deg: float     # roof pitch; slopes DOWN toward the front (y-min), house
                         # side (y-max) high. clear_height is the house-side value.
     gutter: bool        # add a rain gutter along the low (front) eave
+    # Material name of the rigid cover (only used when kind == "glass"); shown in
+    # the Materialliste. None -> fall back to the generic "Glas / PVC-Platte".
+    material: Optional[str] = None
+    # Panelisation of a "glass" cover: split it into equal panels ~this wide
+    # across x. Each interior joint then lands on a rafter (the rafters are
+    # placed under the joints) and gets a connecting H-Profil. None -> one panel.
+    panel_width: Optional[float] = None
+    profile_width: float = 50.0       # H-Profil width across x (straddles a joint)
+    profile_material: Optional[str] = None  # H-Profil material (Materialliste)
 
 
 @dataclass
@@ -323,6 +332,13 @@ def load_config(path: str) -> Config:
     tilt = _num(ro.get("tilt_deg", 0), "pergola.roof.tilt_deg")
     if not 0 <= tilt < 60:
         raise ConfigError("pergola.roof.tilt_deg must be between 0 and 60 degrees.")
+    # Optional panelisation of a rigid ("glass") cover. `panel_width` splits the
+    # cover into equal panels across x; `join_profile` describes the connecting
+    # H-Profil placed over each interior joint.
+    panel_width = ro.get("panel_width")
+    jp = ro.get("join_profile") or {}
+    if not isinstance(jp, dict):
+        raise ConfigError("pergola.roof.join_profile must be a mapping of options.")
     roof = Roof(
         kind=kind,
         slat_width=L(slat.get("width", 80), "pergola.roof.slat.width", positive=True),
@@ -332,6 +348,11 @@ def load_config(path: str) -> Config:
         thickness=L(ro.get("thickness", 10), "pergola.roof.thickness", positive=True),
         tilt_deg=tilt,
         gutter=bool(ro.get("gutter", False)),
+        material=(str(ro["material"]) if ro.get("material") is not None else None),
+        panel_width=(L(panel_width, "pergola.roof.panel_width", positive=True)
+                     if panel_width is not None else None),
+        profile_width=L(jp.get("width", 50), "pergola.roof.join_profile.width", positive=True),
+        profile_material=(str(jp["material"]) if jp.get("material") is not None else None),
     )
 
     framing = str(pg.get("framing", "stacked")).lower()
