@@ -85,18 +85,30 @@ pergola:
     # Available timber: 80 x 60 mm, on edge (80 = height).
     width: 60
     height: 80
-    spacing: 660        # target clear field between supports. With flush framing the
-                        # two side beams act as the outer supports and the rafters are
-                        # spread evenly across the bay between them (here, across the
-                        # 2400 mm width: 2 interior rafters, ~747 mm fields) — well within
-                        # a 6 mm solid PVC sheet's allowable support spacing (~900 mm).
+    spacing: 660        # target clear field — used ONLY when the roof is not
+                        # panelised. Here roof.panel_width is set, so the rafters are
+                        # placed UNDER the panel joints instead (x = 800 and 1600): 2
+                        # interior rafters, 3 fields of 800 mm. Each panel edge then
+                        # rests on a support and each joint is carried by a rafter. The
+                        # clear field (~690-740 mm) stays within a 6 mm solid PVC
+                        # sheet's allowable support spacing (~900 mm).
     direction: y        # rafters span along y (down the slope)
 
   roof:
     kind: glass         # rigid translucent panel representation (here: a SOLID sheet)
     thickness: 6        # massive PVC-Platte (solid PVC sheet, 6 mm). A solid sheet, not
-                        # a twin-wall/Hohlkammer panel. 6 mm spans the ~747 mm rafter
+                        # a twin-wall/Hohlkammer panel. 6 mm spans the ~740 mm rafter
                         # field comfortably (solid sheets allow ~900 mm at 6 mm).
+    material: PVC       # cover material, shown in the Materialliste (massive PVC sheet)
+    # Panelise the cover into equal panels ~this wide across x. 2400 / 800 = 3
+    # equal panels of exactly 800 mm; the 2 interior joints (x = 800 and 1600)
+    # each land on a rafter (build.py places the rafters under the joints) and are
+    # closed with the H-Profil below. This matches off-the-shelf 800-mm-wide sheet
+    # widths so a joint never floats between supports. Remove to get one panel.
+    panel_width: 800
+    join_profile:       # connecting H-Profil over each interior panel joint
+      width: 50         # profile width across x (straddles the joint, screwed to the rafter)
+      material: Aluminium   # alu glazing bar (standard for solid sheets; could be PVC)
     tilt_deg: 5         # pitch: slopes DOWN toward the front, to shed rain/snow. 5 deg
                         # is the practical MINIMUM for solid PVC/PC/acrylic panels
                         # (manufacturers: >=5 deg ~ 9 %; 7-15 deg gives better self-

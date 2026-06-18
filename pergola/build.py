@@ -39,19 +39,19 @@ def _count_by_spacing(length: float, spacing: float) -> int:
     return max(2, int(round(length / spacing)) + 1)
 
 
-def _slab(x0, x1, y0, y1, zb0, zb1, thickness, category):
+def _slab(x0, x1, y0, y1, zb0, zb1, thickness, category, material=""):
     """A roof slab spanning [x0,x1]x[y0,y1]; its underside runs from ``zb0`` at
     y0 to ``zb1`` at y1. Returns an axis-aligned :class:`Box` when level, else a
     tilted :class:`Prism` so flat roofs keep their simple box representation."""
     if abs(zb1 - zb0) < 1e-6:
         return Box(pos=(x0, y0, zb0), size=(x1 - x0, y1 - y0, thickness),
-                   category=category)
+                   category=category, material=material)
     c = np.array([
         [x0, y0, zb0], [x1, y0, zb0], [x1, y1, zb1], [x0, y1, zb1],
         [x0, y0, zb0 + thickness], [x1, y0, zb0 + thickness],
         [x1, y1, zb1 + thickness], [x0, y1, zb1 + thickness],
     ])
-    return Prism(corners_arr=c, category=category)
+    return Prism(corners_arr=c, category=category, material=material)
 
 
 def _brace(cx, cy, half, axis, sign, z_top, length, t) -> Prism:
@@ -196,6 +196,18 @@ def build_pergola(pg: Pergola) -> List[Box]:
             boxes.append(_slab(cx - bm.width / 2, cx + bm.width / 2, roof_y0, roof_y1,
                                underside(roof_y0), underside(roof_y1), bh, "beam"))
 
+    # Panelised rigid cover: split a "glass" cover into equal panels across x
+    # (roof.panel_width). Each interior joint then lands ON a rafter — the
+    # rafters below are placed under the joints — so every panel edge is
+    # supported and the joints can be closed with a connecting H-Profil. With no
+    # panel_width there are no joints and the rafters fall back to even spacing.
+    roof = pg.roof
+    panel_joints: List[float] = []
+    if roof.kind == "glass" and roof.panel_width is not None:
+        n_panels = max(1, int(round(w / roof.panel_width)))
+        panel_w = w / n_panels
+        panel_joints = [ox + i * panel_w for i in range(1, n_panels)]
+
     # Rafters laid across the beams; they span the roof (no overhang past the
     # beams) and follow the roof slope. Stacked framing rests them ON TOP of the
     # beams and runs them out to the roof edge (the beam outer faces); flush
@@ -206,14 +218,19 @@ def build_pergola(pg: Pergola) -> List[Box]:
     rb = (bh - rh) if flush else bh    # rafter underside, measured above the post top
     if rf.direction == "y":
         if flush:
-            # The two side beams of the perimeter ring already carry the roof's
-            # left/right edges, so they act as the outer supports. The rafters
-            # are therefore spread evenly across the OPEN bay between the side
-            # beams with equal gaps — none doubled up against a side beam.
-            lo = xs[0] + bm.width / 2      # inner face of the left side beam
-            hi = xs[-1] - bm.width / 2     # inner face of the right side beam
-            n = max(1, int(round((hi - lo) / rf.spacing)) - 1)   # interior rafters
-            centers = lo + (hi - lo) * np.arange(1, n + 1) / (n + 1)
+            if panel_joints:
+                # One rafter under each panel joint, so every joint (and its
+                # H-Profil) is carried and each panel edge rests on a support.
+                centers = np.array(panel_joints)
+            else:
+                # The two side beams of the perimeter ring already carry the
+                # roof's left/right edges, so they act as the outer supports. The
+                # rafters are then spread evenly across the OPEN bay between the
+                # side beams with equal gaps — none doubled up against a side beam.
+                lo = xs[0] + bm.width / 2      # inner face of the left side beam
+                hi = xs[-1] - bm.width / 2     # inner face of the right side beam
+                n = max(1, int(round((hi - lo) / rf.spacing)) - 1)   # interior rafters
+                centers = lo + (hi - lo) * np.arange(1, n + 1) / (n + 1)
             ry0, ry1 = raf_y0, raf_y1      # housed between the front/back beams
         else:
             n = _count_by_spacing(w - rf.width, rf.spacing)
@@ -235,14 +252,29 @@ def build_pergola(pg: Pergola) -> List[Box]:
 
     # Roof surface follows the slope, resting on the plane formed by the rafter
     # tops (stacked) or the flush frame+rafter tops (flush).
-    roof = pg.roof
-
     def roof_base(y: float) -> float:
         return underside(y) + bh + (0.0 if flush else rh)
 
     if roof.kind == "glass":
-        boxes.append(_slab(ox, ox + w, roof_y0, roof_y1,
-                           roof_base(roof_y0), roof_base(roof_y1), roof.thickness, "glass"))
+        # Panel material name for the Materialliste (e.g. "PVC"); blank -> the
+        # category default. Panels span the slope (y) full length; joints run
+        # down-slope in x and are placed at panel_joints (each over a rafter).
+        pmat = roof.material or ""
+        edges = [ox] + list(panel_joints) + [ox + w]   # panel boundaries in x
+        for px0, px1 in zip(edges[:-1], edges[1:]):
+            boxes.append(_slab(px0, px1, roof_y0, roof_y1,
+                               roof_base(roof_y0), roof_base(roof_y1),
+                               roof.thickness, "glass", material=pmat))
+        # Connecting H-Profil straddling each interior joint, running down the
+        # slope over its rafter; drawn a little proud of the panels (a raised
+        # seam / glazing bar). One per joint.
+        pw = roof.profile_width
+        cap = roof.thickness + 6.0                      # sits ~6 mm above the panels
+        jmat = roof.profile_material or ""
+        for jx in panel_joints:
+            boxes.append(_slab(jx - pw / 2, jx + pw / 2, roof_y0, roof_y1,
+                               roof_base(roof_y0), roof_base(roof_y1),
+                               cap, "profile", material=jmat))
     elif roof.kind != "open":
         sw, sh = roof.slat_width, roof.slat_height
         if roof.direction == "x":  # slats run along x at stepped heights
