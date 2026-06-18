@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 
 from pergola.build import build_elements
 from pergola.model import ConfigError, load_config
-from pergola import views2d, view3d, report, solid, joinery
+from pergola import views2d, view3d, report, solid, joinery, materials
 
 
 def main(argv=None) -> int:
@@ -51,8 +51,12 @@ def main(argv=None) -> int:
     # Real 3D solid model (STEP / STL / glTF) from the same box model.
     model_paths = solid.export_model(elements, args.out)
 
+    # Bill of materials (Materialliste) derived from the same box model.
+    bom = materials.summarize(elements)
+
     paths = report.write_outputs(views, args.out, os.path.basename(args.config),
-                                 cfg.units, model_paths, details=details)
+                                 cfg.units, model_paths, details=details,
+                                 materials=bom)
     for _, _, fig in views:
         plt.close(fig)
     for _, _, fig, _ in details:
