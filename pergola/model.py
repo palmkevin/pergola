@@ -102,6 +102,12 @@ class Roof:
     panel_width: Optional[float] = None
     profile_width: float = 50.0       # H-Profil width across x (straddles a joint)
     profile_material: Optional[str] = None  # H-Profil material (Materialliste)
+    # Edge/closure profiles along the two side (left/right) roof edges, clamping
+    # each outer panel edge down onto the side beam. None -> no edge profiles.
+    # (The front edge drains into the gutter and the house edge is a wall
+    # flashing, so only the two longitudinal side edges get a clamp profile.)
+    edge_profile_width: Optional[float] = None
+    edge_profile_material: Optional[str] = None
 
 
 @dataclass
@@ -339,6 +345,16 @@ def load_config(path: str) -> Config:
     jp = ro.get("join_profile") or {}
     if not isinstance(jp, dict):
         raise ConfigError("pergola.roof.join_profile must be a mapping of options.")
+    ep_raw = ro.get("edge_profile")
+    edge_profile_width = None
+    edge_profile_material = None
+    if ep_raw is not None:
+        if not isinstance(ep_raw, dict):
+            raise ConfigError("pergola.roof.edge_profile must be a mapping of options.")
+        edge_profile_width = L(ep_raw.get("width", 40),
+                               "pergola.roof.edge_profile.width", positive=True)
+        edge_profile_material = (str(ep_raw["material"])
+                                 if ep_raw.get("material") is not None else None)
     roof = Roof(
         kind=kind,
         slat_width=L(slat.get("width", 80), "pergola.roof.slat.width", positive=True),
@@ -353,6 +369,8 @@ def load_config(path: str) -> Config:
                      if panel_width is not None else None),
         profile_width=L(jp.get("width", 50), "pergola.roof.join_profile.width", positive=True),
         profile_material=(str(jp["material"]) if jp.get("material") is not None else None),
+        edge_profile_width=edge_profile_width,
+        edge_profile_material=edge_profile_material,
     )
 
     framing = str(pg.get("framing", "stacked")).lower()

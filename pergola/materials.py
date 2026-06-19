@@ -34,6 +34,7 @@ _MATERIAL = {
     "step":    ("Fundamentstufe", "Beton", "volume"),
     "glass":   ("Dachplatte", "Glas / PVC-Platte", "area"),
     "profile": ("Verbindungsprofil (H-Profil)", "Aluminium", "length"),
+    "edge_profile": ("Randabschlussprofil", "Aluminium", "length"),
     "gutter":  ("Dachrinne", "Blech / Zink", "length"),
     "rod":     ("Gardinenstange", "Metall / Holz", "length"),
     "curtain": ("Gardine", "Stoff", "area"),
@@ -41,7 +42,7 @@ _MATERIAL = {
 
 # Display order of the rows.
 _ORDER = ["footing", "step", "post", "beam", "rafter", "slat",
-          "glass", "profile", "gutter", "brace", "rod", "curtain"]
+          "glass", "profile", "edge_profile", "gutter", "brace", "rod", "curtain"]
 
 # Unit label per metric kind.
 _UNIT = {"length": "lfm (m)", "volume": "m³", "area": "m²"}
