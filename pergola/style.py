@@ -8,6 +8,7 @@ from __future__ import annotations
 CATEGORY_STYLE = {
     "footing":  {"face": "#d9d2c5", "edge": "#9a8f7a"},
     "step":     {"face": "#bdb8ad", "edge": "#857c6b"},
+    "anchor":   {"face": "#aab0b5", "edge": "#6c7378"},
     "post":     {"face": "#b07d52", "edge": "#5c3d23"},
     "beam":     {"face": "#caa06e", "edge": "#5c3d23"},
     "rafter":   {"face": "#dcb887", "edge": "#6b4a2b"},
@@ -40,6 +41,7 @@ CATEGORY_ZORDER = {
     "wall": 1,
     "building": 1,
     "post": 2,
+    "anchor": 3,    # steel shoe at the post foot, drawn over the post base
     "brace": 3,
     "curtain": 3,
     "rafter": 4,

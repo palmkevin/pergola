@@ -85,6 +85,8 @@ corners, house-side posts pulled this far off the wall while the roof still span
 `count_y`; places BOTH rows explicitly so the roof can overhang the post ring on the front *and*
 house sides — takes precedence over `house_offset`);
 `posts.size` (a single number for a square post, or `[x, y]` for a rectangular section);
+`posts.anchor` (galvanised steel post base / U-Stützenfuß under every post — see "Pfosten-
+Verankerung" below; lifts the post `air_gap` clear of the concrete and adds an `anchor` element);
 `framing` (`stacked`, the default — rafters sit on top of the beams; or `flush` — a one-level
 roof: `build.py` builds a full perimeter beam ring on all four sides and houses the rafters
 flush *between* the front/back beams, tops aligned, so the roof covering rests on a single plane);
@@ -151,6 +153,41 @@ the rafters are then placed UNDER each interior joint (so a joint never floats b
 each joint gets a connecting H-Profil (`roof.join_profile.width`/`material`, a new `profile`
 element). Panels and profiles carry a per-box `material` (on `Box`/`Prism`) that overrides the
 category default in `materials.py`. Omit `panel_width` for one continuous pane (old behaviour).
+
+## Pfosten-Verankerung (post anchoring)
+
+How the posts tie to the ground (`posts.anchor` → an `anchor` element per post, category styled steel
+grey, counted in the Materialliste as **Stück** via the new `count` metric).
+
+- **Principle.** Never set timber directly in/on concrete — the end grain wicks water and rots, and
+  the foot must also resist wind **uplift**, not just compression. So every post stands on a
+  galvanised steel base with an **air gap** (capillary break) and bolted/screwed fixing. Lateral
+  stiffness comes from the `braces`; the feet carry vertical load + uplift.
+- **Chosen part.** A **71 mm Alberts U-Stützenfuß to embed in concrete** (ribbed rod ~16 mm/200 mm,
+  CE ETA-10/0210; Brico Art. 5340037). Cheaper than an adjustable foot and adequate for this light,
+  braced pergola (an H-anchor is more robust — broad blade vs a single rod — but was not needed).
+- **80 × 60 post is a non-standard section.** Mill a ~4.5 mm rebate into two opposite faces so that
+  dimension goes **80 → 71**; the standard 71 U then fits snug and **flush** (overall 80 preserved),
+  and the 60 mm wings cover the 60 mm face exactly. Keep the rebate **open at the bottom** (drainage)
+  and treat the cut wood. This U is plain (no step) → a **spacer (washers/EPDM) under the end grain**
+  gives the ventilation gap; the U is open front/back so water drains sideways (no drain hole).
+- **Post orientation.** All posts are turned **80 mm front-back** (y, away from the house), **60 mm
+  along the wall** (`posts.size: [60, 80]`), so the U-anchor bolts run front-back and stay reachable
+  (on the house-side corner the wall blocks one side). Consequence: the front/back beams (80 mm in y)
+  now sit flush on the 80 mm post depth, while the side beams overhang the 60 mm post width by ~10 mm
+  each side — unavoidable with a rectangular post; orientation is driven by bolt access, not flushness.
+- **Modelling.** `build._post_anchor` emits **one** steel collar per post from the concrete top up
+  by `air_gap + wing_height` (the lower `air_gap` is the clear gap; the rest wraps the post like the
+  wings); the post is raised by `air_gap`. The cast-in rod + its concrete live in the `footing`/house
+  support and are **not** redrawn. The collar runs the gap across the post's **wider (milled) face**,
+  so it follows whichever way the post is turned (here y).
+- **Site facts (build, not dimensioned in the model).** Ground = 3 cm terrace slabs on a chipping
+  bed. *Front row:* pour each footing **monolithic up to slab level** (pier ≥ ~15 cm for rod cover),
+  cut slabs around with a 5–10 mm gap. *House side (corner post):* the real base is **not** the
+  modelled 175 mm `house_step` but a corner — small concrete wall (left), garden-house **concrete
+  foundation** (back, not the timber wall), a **6 cm curb** (in its own concrete) and an **8 cm gravel
+  drainage strip**; set the U on the curb, excavate the gravel **20 cm** and pour concrete bonded to
+  both existing foundations.
 
 ## The 3D view
 

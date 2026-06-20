@@ -46,6 +46,28 @@ class HouseStep:
 
 
 @dataclass
+class PostAnchor:
+    """Galvanised steel post base (U-Stützenfuß) tying each post to its
+    foundation, instead of standing the post directly on the concrete.
+
+    The real part is a 71 mm Alberts U-anchor on a ribbed rod cast into the
+    concrete (CE ETA-10/0210). The post's wider face is milled down (80 ->
+    ``width``) so the standard U fits snug and FLUSH, and the post stands
+    ``air_gap`` clear of the concrete (a spacer / capillary break so the end
+    grain ventilates). Modelled as a single steel collar at the post foot that
+    fills the air gap and wraps ``wing_height`` up the post sides like the U's
+    wings; the cast-in rod/concrete lives in the footing. The gap runs across x
+    (the milled wider face). See CLAUDE.md "Pfosten-Verankerung"."""
+
+    width: float        # U gap = the milled post face it clamps (mm)
+    wing_depth: float   # how far the wings wrap along the other post face (mm)
+    wing_height: float  # how far the wings rise up the post sides (mm)
+    plate: float        # steel thickness (mm)
+    air_gap: float      # post lifted this far above the concrete (ventilation, mm)
+    material: Optional[str] = None
+
+
+@dataclass
 class Posts:
     size_x: float       # post cross-section along x
     size_y: float       # post cross-section along y (equal to size_x for a square post)
@@ -65,6 +87,10 @@ class Posts:
     # Foundation step along the house wall: when set, the house-side post row
     # (the row nearest the wall) stands on this step rather than on dug footings.
     house_step: Optional["HouseStep"] = None
+    # Galvanised steel post base (U-Stützenfuß) under each post. When set, every
+    # post stands on this anchor, lifted `air_gap` above its foundation. None ->
+    # the post sits directly on the footing/step (the old behaviour).
+    anchor: Optional["PostAnchor"] = None
 
 
 @dataclass
@@ -292,6 +318,25 @@ def load_config(path: str) -> Config:
             x0=sx0,
             x1=sx1,
         )
+    # Post anchor (galvanised U-Stützenfuß) under each post (optional).
+    an_raw = po.get("anchor")
+    anchor = None
+    if an_raw is not None:
+        if not isinstance(an_raw, dict):
+            raise ConfigError("pergola.posts.anchor must be a mapping of options.")
+        anchor = PostAnchor(
+            width=L(_require(an_raw, "width", "pergola.posts.anchor"),
+                    "pergola.posts.anchor.width", positive=True),
+            wing_depth=L(an_raw.get("wing_depth", 60),
+                         "pergola.posts.anchor.wing_depth", positive=True),
+            wing_height=L(an_raw.get("wing_height", 150),
+                          "pergola.posts.anchor.wing_height", positive=True),
+            plate=L(an_raw.get("plate", 4),
+                    "pergola.posts.anchor.plate", positive=True),
+            air_gap=L(an_raw.get("air_gap", 10),
+                      "pergola.posts.anchor.air_gap", positive=True),
+            material=(str(an_raw["material"]) if an_raw.get("material") is not None else None),
+        )
     # size: a single number (square post) or a [x, y] pair (rectangular post).
     raw_size = _require(po, "size", "pergola.posts")
     if isinstance(raw_size, (list, tuple)):
@@ -313,6 +358,7 @@ def load_config(path: str) -> Config:
                       if house_offset is not None else None),
         rows_y_from_wall=rows_y_from_wall,
         house_step=house_step,
+        anchor=anchor,
     )
 
     be = _require(pg, "beams", "pergola")

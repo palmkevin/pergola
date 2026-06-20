@@ -54,6 +54,32 @@ def _slab(x0, x1, y0, y1, zb0, zb1, thickness, category, material=""):
     return Prism(corners_arr=c, category=category, material=material)
 
 
+def _post_anchor(cx, cy, base, an, size_x, size_y) -> Box:
+    """The galvanised U-Stützenfuß at one post foot.
+
+    Modelled as one steel collar from the concrete top (z = ``base``) up the
+    post sides by ``air_gap + wing_height``: the lower ``air_gap`` is the clear
+    space holding the post off the concrete (ventilation), the rest wraps the
+    post like the U's wings. The gap runs across the post's WIDER face (the one
+    milled down to ``width`` so the standard U fits), so the anchor follows
+    whichever way the post is turned; the wings wrap the narrower face over
+    ``wing_depth``. The ribbed rod and its concrete live in the footing below,
+    so they are not redrawn."""
+    collar = an.width + 2.0 * an.plate      # across the milled face: the gap + both wings
+    wings = an.wing_depth                   # along the narrower face
+    sz = an.air_gap + an.wing_height
+    if size_x >= size_y:                    # wider face is x -> gap across x
+        sx, sy = collar, wings
+    else:                                   # wider face is y -> gap across y
+        sx, sy = wings, collar
+    return Box(
+        pos=(cx - sx / 2.0, cy - sy / 2.0, base),
+        size=(sx, sy, sz),
+        category="anchor",
+        material=(an.material or ""),
+    )
+
+
 def _brace(cx, cy, half, axis, sign, z_top, length, t) -> Prism:
     """A 45° knee brace (Kopfband) in a vertical plane.
 
@@ -141,7 +167,10 @@ def build_pergola(pg: Pergola) -> List[Box]:
 
     # Footings + posts at each grid node. Post tops follow the sloped underside.
     # A house-side post that lands on the step gets no footing and starts at the
-    # step top (z = step.height) — the step is its foundation.
+    # step top (z = step.height) — the step is its foundation. When a post anchor
+    # (U-Stützenfuß) is configured, the post stands on it, lifted `air_gap` above
+    # its foundation so the end grain ventilates.
+    an = ps.anchor
     for cx in xs:
         for cy in ys:
             on_step = (step is not None and cy == house_cy
@@ -153,9 +182,13 @@ def build_pergola(pg: Pergola) -> List[Box]:
                     size=(ps.footing.size, ps.footing.size, ps.footing.depth),
                     category="footing",
                 ))
+            post_base = base
+            if an is not None:
+                boxes.append(_post_anchor(cx, cy, base, an, ps.size_x, ps.size_y))
+                post_base = base + an.air_gap
             boxes.append(Box(
-                pos=(cx - half_x, cy - half_y, base),
-                size=(ps.size_x, ps.size_y, underside(cy) - base),
+                pos=(cx - half_x, cy - half_y, post_base),
+                size=(ps.size_x, ps.size_y, underside(cy) - post_base),
                 category="post",
             ))
 

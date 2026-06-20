@@ -22,6 +22,7 @@ import numpy as np
 #   metric "length" -> running length in metres (Holz, Blech, Metall)
 #   metric "volume" -> concrete volume in m³ (Beton)
 #   metric "area"   -> sheet/fabric area in m² (Platte, Stoff)
+#   metric "count"  -> a counted fitting, reported as Stück (Beschläge)
 # Surrounding categories (wall/building/bed/path) are deliberately absent: they
 # are the existing site, not pergola material.
 _MATERIAL = {
@@ -32,6 +33,7 @@ _MATERIAL = {
     "brace":   ("Kopfband / Eckstrebe", "Holz", "length"),
     "footing": ("Fundament", "Beton", "volume"),
     "step":    ("Fundamentstufe", "Beton", "volume"),
+    "anchor":  ("Pfostenanker (U-Stützenfuß)", "Stahl, verzinkt", "count"),
     "glass":   ("Dachplatte", "Glas / PVC-Platte", "area"),
     "profile": ("Verbindungsprofil (H-Profil)", "Aluminium", "length"),
     "edge_profile": ("Randabschlussprofil", "Aluminium", "length"),
@@ -41,11 +43,11 @@ _MATERIAL = {
 }
 
 # Display order of the rows.
-_ORDER = ["footing", "step", "post", "beam", "rafter", "slat",
+_ORDER = ["footing", "step", "anchor", "post", "beam", "rafter", "slat",
           "glass", "profile", "edge_profile", "gutter", "brace", "rod", "curtain"]
 
 # Unit label per metric kind.
-_UNIT = {"length": "lfm (m)", "volume": "m³", "area": "m²"}
+_UNIT = {"length": "lfm (m)", "volume": "m³", "area": "m²", "count": "Stück"}
 
 
 def _dims_mm(el) -> List[float]:
@@ -56,7 +58,10 @@ def _dims_mm(el) -> List[float]:
 
 
 def _metric_value(kind: str, d0: float, d1: float, d2: float) -> float:
-    """Per-piece summary value for one member, in metric units (m / m² / m³)."""
+    """Per-piece summary value for one member, in metric units (m / m² / m³ /
+    Stück)."""
+    if kind == "count":
+        return 1.0                              # a counted fitting -> total = qty
     if kind == "length":
         return d2 / 1000.0                      # longest edge = the run length
     if kind == "area":
@@ -98,7 +103,7 @@ def summarize(elements) -> dict:
             "material": material,
             "dims": f"{d0:g} × {d1:g} × {d2:g}",   # ascending: section/thickness .. length
             "qty": qty,
-            "amount": round(total, 2),
+            "amount": int(round(total)) if kind == "count" else round(total, 2),
             "unit": "m" if kind == "length" else _UNIT[kind],
         })
         bucket = totals.setdefault(kind, [0.0, _UNIT[kind]])
@@ -106,8 +111,8 @@ def summarize(elements) -> dict:
 
     total_rows = [{
         "material": {"length": "Holz / Metall / Blech", "volume": "Beton",
-                     "area": "Platten / Stoff"}[kind],
-        "amount": round(val, 2),
+                     "area": "Platten / Stoff", "count": "Beschläge"}[kind],
+        "amount": int(round(val)) if kind == "count" else round(val, 2),
         "unit": unit,
     } for kind, (val, unit) in sorted(totals.items())]
 
