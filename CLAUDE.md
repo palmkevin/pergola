@@ -171,20 +171,23 @@ grey, counted in the Materialliste as **Stück** via the new `count` metric).
   and the 60 mm wings cover the 60 mm face exactly. Keep the rebate **open at the bottom** (drainage)
   and treat the cut wood. This U is plain (no step) → a **spacer (washers/EPDM) under the end grain**
   gives the ventilation gap; the U is open front/back so water drains sideways (no drain hole).
+- **Post orientation.** All posts are turned **80 mm front-back** (y, away from the house), **60 mm
+  along the wall** (`posts.size: [60, 80]`), so the U-anchor bolts run front-back and stay reachable
+  (on the house-side corner the wall blocks one side). Consequence: the front/back beams (80 mm in y)
+  now sit flush on the 80 mm post depth, while the side beams overhang the 60 mm post width by ~10 mm
+  each side — unavoidable with a rectangular post; orientation is driven by bolt access, not flushness.
 - **Modelling.** `build._post_anchor` emits **one** steel collar per post from the concrete top up
   by `air_gap + wing_height` (the lower `air_gap` is the clear gap; the rest wraps the post like the
   wings); the post is raised by `air_gap`. The cast-in rod + its concrete live in the `footing`/house
-  support and are **not** redrawn. The collar runs the gap across **x** (the milled wider face) for
-  ALL posts — the model does not rotate individual posts.
+  support and are **not** redrawn. The collar runs the gap across the post's **wider (milled) face**,
+  so it follows whichever way the post is turned (here y).
 - **Site facts (build, not dimensioned in the model).** Ground = 3 cm terrace slabs on a chipping
   bed. *Front row:* pour each footing **monolithic up to slab level** (pier ≥ ~15 cm for rod cover),
   cut slabs around with a 5–10 mm gap. *House side (corner post):* the real base is **not** the
   modelled 175 mm `house_step` but a corner — small concrete wall (left), garden-house **concrete
   foundation** (back, not the timber wall), a **6 cm curb** (in its own concrete) and an **8 cm gravel
   drainage strip**; set the U on the curb, excavate the gravel **20 cm** and pour concrete bonded to
-  both existing foundations. **Orientation of that corner post:** 80 mm **front-back** (away from the
-  house), 60 mm along the wall, so the bolts are reachable (the left side is blocked by the wall) —
-  a real-world exception to the model's uniform 80-along-x.
+  both existing foundations.
 
 ## The 3D view
 
