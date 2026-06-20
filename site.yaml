@@ -73,6 +73,40 @@ pergola:
       height: 175       # step height (17.5 cm) — posts start at z = 175 on top
       depth: 145        # step depth out from the wall (14.5 cm)
       x_extent: [-500, 2450]  # left .. right ends along x (full house-wall length)
+    # Pfosten-Verankerung: verzinkter U-Stützenfuß (Alberts, zum Einbetonieren)
+    # unter JEDEM Pfosten. Real ein 71-mm-U mit gerippter Betonier-Rundstange
+    # (~16 mm / 200 mm), in den Beton gegossen; CE ETA-10/0210. Der 80-mm-Pfosten
+    # ist Sondermaß -> an zwei gegenüberliegenden Flächen je ~4,5 mm einfräsen
+    # (80 -> 71), dann sitzt der 71er-U satt und FLUSH (Außenmaß bleibt 80); die
+    # 60-mm-Wangen decken die 60-mm-Seite exakt ab. Falz nach unten offen lassen
+    # (Drainage), Frässtellen imprägnieren. Der Pfosten steht `air_gap` ÜBER dem
+    # Beton (Distanzscheiben/EPDM unter dem Hirnholz; der U ist vorne/hinten offen,
+    # Wasser läuft seitlich ab — dieser U hat KEIN Ablaufloch). Im Modell als ein
+    # Stahl-„Schuh" je Pfosten dargestellt (zählt in der Materialliste als Stück);
+    # die Rippstange + ihr Beton stecken im `footing` bzw. der hausseitigen Auflage
+    # und werden nicht separat gezeichnet. Volle Einbau-Doku: CLAUDE.md
+    # "Pfosten-Verankerung". Kurz:
+    #  - Hausgegenseite (vordere Reihe): Boden = 3 cm Terrassenplatten auf
+    #    Splittbett. Fundament je Pfosten MONOLITHISCH bis Plattenoberkante
+    #    hochziehen (Pfeiler >= ~15 cm für Betondeckung der Stange), Platten
+    #    ringsum mit 5-10 mm Spalt ausschneiden.
+    #  - Hausseite (Eckpfosten): real KEINE 175-mm-Stufe wie oben modelliert,
+    #    sondern eine Ecke — links kleine Beton-Mauer, hinten Beton-Fundament des
+    #    Gartenhauses (NICHT die Holzwand), Bordstein 6 cm (in eigenem Beton)
+    #    trennt einen 8 cm breiten Kies-Drainagestreifen von der Terrasse. U auf
+    #    den Bordstein, Kies dahinter 20 cm tief ausheben + Beton gießen (an
+    #    Bordstein- und Gartenhaus-Fundament anbinden), Stange darin.
+    #  - AUSRICHTUNG hausseitiger Eckpfosten: 80-mm-Seite FRONT-BACK (vom Haus
+    #    weg), 60 mm entlang der Wand -> Bolzen vorne/hinten erreichbar (links
+    #    blockiert die Mauer). Das Modell dreht einzelne Pfosten NICHT (alle haben
+    #    80 = x entlang der Wand) — bewusste Vereinfachung / mögliche Erweiterung.
+    anchor:
+      width: 71         # U-Spalt = auf 71 gefräste (breite) Pfostenseite
+      wing_depth: 60    # Wangentiefe entlang der anderen (60-mm-)Pfostenseite
+      wing_height: 150  # wie weit die Wangen am Pfosten hochreichen
+      plate: 4          # Blechdicke
+      air_gap: 10       # Pfosten steht 10 mm über dem Beton (Belüftung)
+      material: Stahl, verzinkt
 
   beams:                # the perimeter frame ring (flush framing builds all 4 sides)
     # Available timber: 120 x 80 mm, set on edge (120 = height) for stiffness — the
