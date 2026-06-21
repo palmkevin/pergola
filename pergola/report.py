@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import hashlib
 import os
+from datetime import datetime, timezone
 from typing import List, Tuple
 
 from matplotlib.backends.backend_pdf import PdfPages
@@ -197,7 +198,8 @@ _HTML = Template(
   </figure>
 </main>
 <footer>Regenerate any time with <code>./run.sh</code> after editing the YAML.
-The STEP file opens in any CAD package; the GLB/STL open in 3D viewers and slicers.</footer>
+The STEP file opens in any CAD package; the GLB/STL open in 3D viewers and slicers.
+<br><small>Built {{ build_time }}</small></footer>
 </body>
 </html>"""
 )
@@ -269,7 +271,9 @@ def write_outputs(views: List[Tuple[str, str, "Figure"]], outdir: str,
                               config_name=config_name,
                               units=units, pdf_name=_versioned(pdf_path),
                               model_glb=glb_name, downloads=downloads,
-                              materials=materials))
+                              materials=materials,
+                              build_time=datetime.now(timezone.utc).strftime(
+                                  "%Y-%m-%d %H:%M:%S UTC")))
 
     return {
         "pdf": pdf_path,
