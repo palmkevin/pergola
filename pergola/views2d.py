@@ -131,10 +131,25 @@ def render_plan(elements: List[Box], cfg: Config):
             ax.text(b.center[X], b.center[Y], b.label, ha="center", va="center",
                     fontsize=style.LABEL_FONTSIZE, color="#444444", zorder=10)
 
-    # Overall pergola dimensions.
+    # Overall pergola dimensions. In y the footprint depth runs all the way to
+    # the house wall, but the built pergola stops short of it (the roof ends over
+    # the house-side beam), so dimension BOTH: the real structure depth (front
+    # edge -> house-side roof edge) as the primary, inner line, and the footprint
+    # depth to the wall just outboard of it for reference.
     ox, oy = pg.origin
+    slo, shi = _structure_bounds(elements)
     _hdim(ax, ox, ox + pg.width, oy - pg.depth * 0.18, feat_y=oy)
-    _vdim(ax, oy, oy + pg.depth, ox - pg.width * 0.14, feat_x=ox)
+
+    inner_x = ox - pg.width * 0.14
+    outer_x = ox - pg.width * 0.30
+    _vdim(ax, slo[Y], shi[Y], inner_x, feat_x=ox)             # real pergola depth
+    ax.text(inner_x - pg.width * 0.035, (slo[Y] + shi[Y]) / 2, "Pergola-Tiefe",
+            ha="right", va="center", rotation=90,
+            fontsize=style.LABEL_FONTSIZE, color=style.DIM_COLOR, zorder=21)
+    _vdim(ax, oy, oy + pg.depth, outer_x, feat_x=ox)          # to the house wall
+    ax.text(outer_x - pg.width * 0.035, oy + pg.depth / 2, "bis Hauswand",
+            ha="right", va="center", rotation=90,
+            fontsize=style.LABEL_FONTSIZE, color=style.DIM_COLOR, zorder=21)
 
     lo, hi = _content_bounds_2d(elements, g, X, Y)
     _set_limits(ax, lo[0], hi[0], lo[1], hi[1])
@@ -301,6 +316,19 @@ def _render_elevation(elements, cfg: Config, *, h, v, nearness, title, subtitle,
     top = phi[Z]
 
     _hdim(ax, ph0, ph0 + pspan, -top * 0.12, feat_y=0)              # overall horizontal
+    # In the side elevation the overall horizontal runs to the house wall, but the
+    # built pergola stops short of it; add the real structure depth (front edge ->
+    # house-side roof edge) below it and label both so the actual pergola end is
+    # readable, not just the distance to the wall.
+    if h == Y:
+        slo, shi = _structure_bounds(elements)
+        _hdim(ax, slo[Y], shi[Y], -top * 0.26, feat_y=0)
+        ax.text((slo[Y] + shi[Y]) / 2, -top * 0.30, "Pergola-Tiefe",
+                ha="center", va="top", fontsize=style.LABEL_FONTSIZE,
+                color=style.DIM_COLOR, zorder=21)
+        ax.text((ph0 + ph0 + pspan) / 2, -top * 0.12 - top * 0.005, "bis Hauswand",
+                ha="center", va="top", fontsize=style.LABEL_FONTSIZE,
+                color=style.DIM_COLOR, zorder=21)
     _vdim(ax, 0, top, ph0 - pspan * 0.10, feat_x=ph0)               # overall height
     _vdim(ax, 0, pg.clear_height, ph0 + pspan + pspan * 0.10,
           feat_x=ph0 + pspan, text=_fmt(pg.clear_height))           # clear height
@@ -339,3 +367,17 @@ def _content_bounds_2d(elements, ground, h, v):
         lo[axis] = min(lo[axis], gmin)
         hi[axis] = max(hi[axis], gmin + gext)
     return lo[[h, v]], hi[[h, v]]
+
+
+# The built pergola itself (roof structure), excluding footings (underground),
+# the foundation step, the gutter/curtain overhangs and the steel anchors. Used
+# to dimension the REAL extent of the pergola, which along y stops short of the
+# house wall (the roof ends over the house-side beam, not at the wall) — so the
+# footprint depth alone never tells you where the pergola actually ends.
+_STRUCTURE = frozenset({"post", "beam", "rafter", "slat", "glass",
+                        "profile", "edge_profile"})
+
+
+def _structure_bounds(elements):
+    """(lo, hi) bounds of the pergola's structural members only."""
+    return bounds([b for b in elements if b.category in _STRUCTURE])
