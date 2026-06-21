@@ -13,9 +13,9 @@ from datetime import datetime
 from typing import List, Tuple
 from zoneinfo import ZoneInfo
 
-# Eastern European Time. Use a representative IANA zone so the timestamp gets
-# correct DST handling (EET in winter, EEST in summer); %Z renders the label.
-_EET = ZoneInfo("Europe/Bucharest")
+# Western European Time. Use a representative IANA zone so the timestamp gets
+# correct DST handling (WET in winter, WEST in summer); %Z renders the label.
+_WET = ZoneInfo("Europe/Lisbon")
 
 from matplotlib.backends.backend_pdf import PdfPages
 from jinja2 import Template
@@ -277,7 +277,7 @@ def write_outputs(views: List[Tuple[str, str, "Figure"]], outdir: str,
                               units=units, pdf_name=_versioned(pdf_path),
                               model_glb=glb_name, downloads=downloads,
                               materials=materials,
-                              build_time=datetime.now(_EET).strftime(
+                              build_time=datetime.now(_WET).strftime(
                                   "%Y-%m-%d %H:%M:%S %Z")))
 
     return {
