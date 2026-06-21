@@ -136,10 +136,14 @@ pergola:
 
   roof:
     kind: glass         # rigid translucent panel representation (here: a SOLID sheet)
-    thickness: 6        # massive PVC-Platte (solid PVC sheet, 6 mm). A solid sheet, not
-                        # a twin-wall/Hohlkammer panel. 6 mm spans the ~740 mm rafter
-                        # field comfortably (solid sheets allow ~900 mm at 6 mm).
-    material: PVC       # cover material, shown in the Materialliste (massive PVC sheet)
+    thickness: 6        # massive Polycarbonat-Platte (solid PC sheet, 6 mm), glasklar.
+                        # A SOLID (compact) sheet, NOT a twin-wall/Hohlkammer panel — the
+                        # glass-like look we want, but tougher and UV-stabler than solid
+                        # PVC (which DIY stores don't stock flat/clear anyway). 6 mm spans
+                        # the ~740 mm rafter field with ease (solid sheets allow ~900 mm).
+    material: Polycarbonat (massiv)   # cover material, shown in the Materialliste. Buy as
+                        # 6 mm glasklare PC-Massivplatte, cut to 800 x ~2090 (Bauhaus
+                        # Zuschnitt or a plastics cut-to-size shop).
     # Panelise the cover into equal panels ~this wide across x. 2400 / 800 = 3
     # equal panels of exactly 800 mm; the 2 interior joints (x = 800 and 1600)
     # each land on a rafter (build.py places the rafters under the joints) and are
@@ -156,8 +160,8 @@ pergola:
                         # chamber U-profiles — there are no chambers, unlike Hohlkammer.)
       width: 40         # profile width across x at each side edge
       material: Aluminium
-    # THERMAL EXPANSION (not a geometry change, a fitting detail): solid PVC moves
-    # ~0.07 mm/m/K — about 4 mm across each 800 mm panel and ~11 mm over the 2.08 m
+    # THERMAL EXPANSION (not a geometry change, a fitting detail): solid PC moves
+    # ~0.065 mm/m/K — about 4 mm across each 800 mm panel and ~10 mm over the 2.08 m
     # length across a ~75 K summer/winter swing. The 3 x 800 = 2400 here is the COLD
     # nominal (= structure width); the play lives in the profiles, NOT the panel
     # widths: use oversized screw holes (+3-4 mm) with EPDM washers, don't push the
