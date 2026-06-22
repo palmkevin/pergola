@@ -220,11 +220,28 @@ surroundings:
   walls:
     # The pergola attaches to the BOARD WALL of a Blockbohlen (log-cabin) garden
     # house: horizontal boards 3 cm thick (-> wall thickness 30 mm, the `size` y).
-    # PROVISIONAL height (from site photos 2026-06-03, NOT measured): a low,
-    # single-storey building with an eave overhang — not a tall masonry house.
-    # Height is a realistic single-storey placeholder (~2.8 m to the eave). CONFIRM
-    # with a real measurement: the eave height vs the pergola roof top (~2220 mm at
-    # the house side) decides whether the pergola tucks under the eave or must drop.
+    #
+    # ROOF-EDGE / GUTTER & THE 75 mm GAP (confirmed on site 2026-06-22):
+    # The pergola roof's high (house-side) edge stops at y = 2525, i.e. 75 mm SHORT
+    # of the wall (it ends over the house-side beam, it does not reach the wall).
+    # That 75 mm gap needs NO separate pergola wall flashing (Wandanschlussblech):
+    # the GARDEN HOUSE itself has an overhanging roof with a rain gutter at ~223 cm
+    # height, and that overhang + gutter sit just above the pergola roof top
+    # (~2220 mm) and comfortably oversail/bridge the 75 mm. Rain off the garden-
+    # house roof is caught by ITS OWN gutter, not dumped into the gap.
+    # -> Decision: KEEP the garden-house gutter. Do NOT remove it to drain the
+    #    garden-house roof over the pergola: that would dump the garden house's
+    #    whole catchment onto a low-pitch (5 deg) 6 mm panel via the gutter at the
+    #    far end of the slope — concentrated discharge, splashing/noise, dirt
+    #    streaks, winter ice at the eave, and overshoot risk at the small front
+    #    gutter. The existing two-gutter solution is the robust one.
+    #
+    # This LOW garden-house roof edge (~223 cm) is the BINDING height constraint of
+    # the whole design: the garden house cannot be raised, so the pergola must tuck
+    # under it -> hence the low roof, the shallow 5 deg pitch and the low front
+    # eave (~1.91 m underside). Those are consequences of this constraint, not free
+    # choices. `height` below (2800) is only the GHOSTED wall placeholder for the
+    # drawings; the governing roof-edge/gutter height is ~2230 mm (confirm exact).
     #
     # Length: the wall is only drawn as far as the pergola needs it. It ends 5 cm
     # past the pergola's right edge (pergola right = x 2400, so wall right = 2450),
