@@ -417,14 +417,14 @@ def build_surroundings(cfg: Config) -> List[Box]:
     boxes: List[Box] = []
     for w in cfg.walls:
         boxes.append(Box(
-            pos=(w.at[0], w.at[1], 0.0),
+            pos=(w.at[0], w.at[1], w.z0),
             size=(w.size[0], w.size[1], w.height),
             category="wall",
             label=w.name,
         ))
     for b in cfg.buildings:
         boxes.append(Box(
-            pos=(b.at[0], b.at[1], 0.0),
+            pos=(b.at[0], b.at[1], b.z0),
             size=(b.size[0], b.size[1], b.height),
             category="building",
             label=b.name,

@@ -196,12 +196,17 @@ class Pergola:
 
 @dataclass
 class Block:
-    """A wall or building footprint."""
+    """A wall or building footprint.
+
+    ``z0`` is the base height (ground = 0 for a normal wall/building); set it to
+    float the block — e.g. a fascia board / eave block sitting up at the garden
+    house's roof edge rather than starting from the ground."""
 
     name: str
     at: Tuple[float, float]
     size: Tuple[float, float]
     height: float
+    z0: float = 0.0
 
 
 @dataclass
@@ -552,6 +557,7 @@ def _block(item, P, L, kind: str) -> Block:
         at=P(_require(item, "at", f"{kind} '{name}'"), f"{kind}.at"),
         size=P(_require(item, "size", f"{kind} '{name}'"), f"{kind}.size"),
         height=L(_require(item, "height", f"{kind} '{name}'"), f"{kind}.height", positive=True),
+        z0=L(item.get("z0", 0), f"{kind}.z0"),
     )
 
 
