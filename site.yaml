@@ -193,6 +193,17 @@ pergola:
     size: 60            # quadratischer Querschnitt der Strebe (mm)
     length: 400         # 45°-Schenkellänge (am Pfosten herunter = am Balken entlang)
     directions: [x, y]  # in beiden vertikalen Ebenen aussteifen
+    # Seitenweise Feinauswahl, WELCHE Ebenen wirklich eine Strebe bekommen:
+    #   x_sides -> x-z-Ebenen: front (haus­abgewandt) / house (Hausseite)
+    #   y_sides -> y-z-Ebenen: left / right
+    # Hier sind die quer über die FRONT laufenden x-Diagonalen bewusst weggelassen
+    # (offene Frontöffnung). Die Aussteifung übernehmen statt dessen: hausseitig
+    # die x-Streben, seitlich (links UND rechts, auch vorne) die y-Streben, und an
+    # der Wegseite (links) zusätzlich die Fußbefestigung der Pfosten an der kniehohen
+    # Betonsteinmauer. So bleibt der Rahmen gegen Schwanken gesichert, ohne dass
+    # Diagonalen die Frontöffnung verstellen.
+    x_sides: [house]       # x-Diagonalen NUR hausseitig (front bleibt frei)
+    y_sides: [left, right] # y-Streben auf beiden Seiten (sichern u.a. vordere Ecken)
 
   # Stoffgardinen an den beiden Seiten (links & rechts). Jede Seite bekommt eine
   # Gardinenstange, die zwischen ihren beiden Eckpfosten gespannt und an ihnen

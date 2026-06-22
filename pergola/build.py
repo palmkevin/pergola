@@ -352,16 +352,21 @@ def build_pergola(pg: Pergola) -> List[Box]:
     # in x-z planes (resist sway parallel to the wall); "y" braces in y-z planes
     # (resist sway toward/away from the house). The house-side beam slopes, so
     # the "y" head height is taken at the head's y position.
+    # ``x_sides`` / ``y_sides`` narrow which planes are braced: the front (low,
+    # house-away) row is ys[0] and the house row ys[-1]; the left column is xs[0]
+    # and the right xs[-1]. Leaving a side out clears it (e.g. an open front).
     brc = pg.braces
     if brc is not None:
         for cx in (xs[0], xs[-1]):
             sx = 1.0 if cx == xs[0] else -1.0
+            col = "left" if cx == xs[0] else "right"
             for cy in (ys[0], ys[-1]):
                 sy = 1.0 if cy == ys[0] else -1.0
-                if "x" in brc.directions:
+                row = "front" if cy == ys[0] else "house"
+                if "x" in brc.directions and row in brc.x_sides:
                     boxes.append(_brace(cx, cy, half_x, "x", sx,
                                         underside(cy), brc.length, brc.size))
-                if "y" in brc.directions:
+                if "y" in brc.directions and col in brc.y_sides:
                     y_head = cy + sy * (half_y + brc.length)
                     boxes.append(_brace(cx, cy, half_y, "y", sy,
                                         underside(y_head), brc.length, brc.size))

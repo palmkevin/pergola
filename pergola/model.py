@@ -162,11 +162,18 @@ class Braces:
     Each outer corner post gets a 45° strut running from the post face up to the
     beam underside. ``directions`` selects the vertical plane(s) each corner is
     braced in: ``x`` -> braces in x-z planes (resist sway *parallel* to the wall),
-    ``y`` -> braces in y-z planes (resist sway *toward/away* from the wall)."""
+    ``y`` -> braces in y-z planes (resist sway *toward/away* from the wall).
+
+    ``x_sides`` / ``y_sides`` then narrow *which* of those planes actually get a
+    brace, so a side can be left clear (e.g. an open front): the x-z planes are
+    the ``front`` and ``house`` post rows, the y-z planes the ``left`` and
+    ``right`` post columns. Default is every plane braced."""
 
     size: float            # square cross-section of the brace (mm)
     length: float          # 45° leg length: run down the post == run along the beam
     directions: List[str]  # subset of {"x", "y"}: which vertical planes to brace
+    x_sides: List[str]     # subset of {"front", "house"}: rows that get x-braces
+    y_sides: List[str]     # subset of {"left", "right"}: columns that get y-braces
 
 
 @dataclass
@@ -458,10 +465,16 @@ def load_config(path: str) -> Config:
             raise ConfigError(
                 "pergola.braces.directions must be a non-empty list of 'x'/'y'.")
         directions = [_axis(d, "pergola.braces.directions") for d in raw_dirs]
+        x_sides = _sides(br.get("x_sides", ["front", "house"]),
+                         ("front", "house"), "pergola.braces.x_sides")
+        y_sides = _sides(br.get("y_sides", ["left", "right"]),
+                         ("left", "right"), "pergola.braces.y_sides")
         braces = Braces(
             size=L(br.get("size", 60), "pergola.braces.size", positive=True),
             length=L(br.get("length", 400), "pergola.braces.length", positive=True),
             directions=directions,
+            x_sides=x_sides,
+            y_sides=y_sides,
         )
 
     pergola = Pergola(
@@ -510,6 +523,23 @@ def _axis(value, ctx: str) -> str:
     if v not in ("x", "y"):
         raise ConfigError(f"{ctx} must be 'x' or 'y', got {value!r}.")
     return v
+
+
+def _sides(value, allowed: Tuple[str, ...], ctx: str) -> List[str]:
+    """Validate a list of side names (a subset of ``allowed``), preserving order
+    and dropping duplicates. An empty list means 'no side braced on this axis'."""
+    if not isinstance(value, (list, tuple)):
+        raise ConfigError(
+            f"{ctx} must be a list, any of {list(allowed)}, got {value!r}.")
+    out: List[str] = []
+    for item in value:
+        v = str(item).lower()
+        if v not in allowed:
+            raise ConfigError(
+                f"{ctx} entries must be one of {list(allowed)}, got {item!r}.")
+        if v not in out:
+            out.append(v)
+    return out
 
 
 _DE_NAMES = {"wall": "Wand", "building": "Gebäude", "bed": "Beet"}
