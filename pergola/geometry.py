@@ -55,6 +55,10 @@ class Box:
     material: str = ""                # optional material override for the Materialliste
                                       # (e.g. "PVC" panel, "Aluminium" profile); blank
                                       # -> use the category's default material
+    board_height: float = 0.0         # drawing hint (walls): visible cladding board
+                                      # course height (mm), e.g. Blockbohlen — the
+                                      # elevations draw light horizontal course lines
+                                      # across the face. 0 -> no cladding lines.
 
     # --- convenience accessors -------------------------------------------------
     @property

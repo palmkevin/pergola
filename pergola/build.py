@@ -419,8 +419,9 @@ def build_surroundings(cfg: Config) -> List[Box]:
         boxes.append(Box(
             pos=(w.at[0], w.at[1], w.z0),
             size=(w.size[0], w.size[1], w.height),
-            category="wall",
+            category=(w.category or "wall"),
             label=w.name,
+            board_height=w.board_height,
         ))
     for b in cfg.buildings:
         boxes.append(Box(

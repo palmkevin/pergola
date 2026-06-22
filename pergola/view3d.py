@@ -27,7 +27,7 @@ FIGSIZE = (11.0, 8.5)
 DPI = 150
 AZIM = -35.0   # camera bearing (degrees); looks from the front-right...
 ELEV = 26.0    # ...and slightly above
-_GHOST = frozenset({"wall", "building"})
+_GHOST = frozenset({"wall", "fascia", "building"})
 
 _LIGHT = np.array([-0.3, -0.55, 0.78])
 _LIGHT = _LIGHT / np.linalg.norm(_LIGHT)
