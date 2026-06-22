@@ -73,9 +73,11 @@ rafters, roof, clear_height), `surroundings.walls` / `surroundings.buildings` / 
 `size` + `rise` + `high_end`), `ground`. `model.py` validates it and raises `ConfigError` with
 specific, friendly messages — keep that style for new fields.
 
-The house wall the pergola attaches to (`surroundings.walls` → `Hauswand`) is the **board wall
+The house wall the pergola stands in front of (`surroundings.walls` → `Hauswand`) is the **board wall
 of a Blockbohlen (log-cabin) garden house** — the boards are **3 cm (30 mm) thick**, which is the
-modelled wall thickness (`size` y). The wall is only drawn as far as the pergola needs it: it ends
+modelled wall thickness (`size` y). The pergola is pulled **26 cm off this wall** so its house-side
+roof edge butts against the garden-house rain gutter (it does not tuck under the eave). The wall is
+only drawn as far as the pergola needs it: it ends
 **5 cm past the pergola** on the right, but runs long on the left (the steep-path side) where the
 beds and ramp sit against it.
 
@@ -183,11 +185,12 @@ grey, counted in the Materialliste as **Stück** via the new `count` metric).
   so it follows whichever way the post is turned (here y).
 - **Site facts (build, not dimensioned in the model).** Ground = 3 cm terrace slabs on a chipping
   bed. *Front row:* pour each footing **monolithic up to slab level** (pier ≥ ~15 cm for rod cover),
-  cut slabs around with a 5–10 mm gap. *House side (corner post):* the real base is **not** the
-  modelled 175 mm `house_step` but a corner — small concrete wall (left), garden-house **concrete
-  foundation** (back, not the timber wall), a **6 cm curb** (in its own concrete) and an **8 cm gravel
-  drainage strip**; set the U on the curb, excavate the gravel **20 cm** and pour concrete bonded to
-  both existing foundations.
+  cut slabs around with a 5–10 mm gap. *House side:* the pergola now stands **26 cm off the wall**
+  (no `house_step` any more), so this row is founded **in the ground like the front row** — its post
+  centre sits ~30 cm out from the wall, roughly in the existing **8 cm gravel drainage strip** behind
+  the **6 cm curb**, with the garden-house **concrete foundation** beyond. Pour each footing monolithic
+  up to slab level; excavate the gravel ~**20 cm** and bond the new concrete to the curb and the
+  garden-house foundation, keeping the drainage.
 
 ## The 3D view
 
