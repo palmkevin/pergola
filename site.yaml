@@ -26,22 +26,23 @@ pergola:
                         # span (posts sit flush at the side edges, so NO side overhang)
     depth: 2075         # y extent: front roof edge (= front beam) .. house wall (207.5 cm,
                         # away from the house). The roof itself does NOT span this whole
-                        # depth — it now STOPS 26 cm in front of the wall: the pergola was
-                        # pulled off the wall so its house-side roof edge butts up AGAINST
-                        # the garden-house rain gutter (not under the eave any more). The
-                        # house-side post row therefore stands on its own dug footing in
-                        # the ground (like the front row), NOT on the old foundation step.
-                        # This depth is kept TO the wall so the slope/clear_height
-                        # reference (y = 2600, the wall) is unchanged.
-  clear_height: 2217    # underside of the roof on the HIGH (house) side. Sized so the
+                        # depth — it now STOPS 29.5 cm in front of the wall: the pergola was
+                        # pulled off the wall so its house-side roof edge lands exactly at
+                        # the bracket that carries the garden-house's upper grey fascia board
+                        # (so that bracket can stay as-is). The house-side post row therefore
+                        # stands on its own dug footing in the ground (like the front row),
+                        # NOT on the old foundation step. This depth is kept TO the wall so
+                        # the slope/clear_height reference (y = 2600, the wall) is unchanged.
+                        # (Front edge fixed at y = 525, so the roof depth is now 1780 mm.)
+  clear_height: 2220    # underside of the roof on the HIGH (house) side. Sized so the
                         # roof's HIGHEST point = exactly 232 cm including the covering
-                        # (was 222 cm; raised 10 cm now that the roof clears the gutter
-                        # instead of tucking under it). That highest point is the panel
-                        # back (house-side) edge at roof_y1 = 2340 mm, i.e. 26 cm IN FRONT
-                        # of the wall (the roof stops against the gutter), so the slope
-                        # drop from the clear_height reference (the wall, y = 2600) to that
-                        # edge is (2600-2340)*tan(5deg) ~ 22.7 mm:
-                        # 2217 + beam 120 + panel 6 - 22.7 = 2320 mm (232.0 cm).
+                        # (was 222 cm = the old garden-house gutter/lower-board underside;
+                        # removing that lower board frees 10 cm up to the upper board). That
+                        # highest point is the panel back (house-side) edge at roof_y1 =
+                        # 2305 mm, i.e. 29.5 cm IN FRONT of the wall, so the slope drop from
+                        # the clear_height reference (the wall, y = 2600) to that edge is
+                        # (2600-2305)*tan(5deg) ~ 25.8 mm:
+                        # 2220 + beam 120 + panel 6 - 25.8 = 2320 mm (232.0 cm).
                         # Recompute this whenever roof.tilt_deg or roof.thickness change.
   framing: flush        # "flush" = one-level roof: a perimeter beam ring with the
                         # rafters housed flush BETWEEN the front/back beams (tops
@@ -64,14 +65,14 @@ pergola:
     # flush with the roof's side edges, so there is NO side overhang (the roof
     # width = the post-to-post outer span = 240 cm). In y there is now NO overhang
     # either: the roof ends right over each beam (front and house side). Post-row
-    # centres from the house wall: house side 300 mm (its roof edge then lands at
-    # 260 mm = 26 cm from the wall, butting against the garden-house gutter), front
-    # row 2035 mm. Centre-to-centre is 1735 mm, so with an 80 mm deep post the CLEAR
-    # inner gap between the rows in y is 1735 - 80 = 1655 mm (165.5 cm). (The
+    # centres from the house wall: house side 335 mm (its roof edge then lands at
+    # 295 mm = 29.5 cm from the wall, at the upper-fascia bracket), front row
+    # 2035 mm. Centre-to-centre is 1700 mm, so with an 80 mm deep post the CLEAR
+    # inner gap between the rows in y is 1700 - 80 = 1620 mm (162.0 cm). (The
     # front/back beams, 80 mm in y, sit flush on the 80 mm post depth; the side
     # beams overhang the 60 mm post width by 10 mm each side — unavoidable with a
     # rectangular post.)
-    rows_y_from_wall: [300, 2035]   # post-row centre distances from the house wall
+    rows_y_from_wall: [335, 2035]   # post-row centre distances from the house wall
     footing:
       size: 300         # square concrete footing under each post — BOTH rows now,
       depth: 600        # since the house-side row stands in the ground 26 cm off the
@@ -93,8 +94,8 @@ pergola:
     #    Splittbett. Fundament je Pfosten MONOLITHISCH bis Plattenoberkante
     #    hochziehen (Pfeiler >= ~15 cm für Betondeckung der Stange), Platten
     #    ringsum mit 5-10 mm Spalt ausschneiden.
-    #  - Hausseite: die Pergola steht jetzt 26 cm von der Wand weg, die hausseitige
-    #    Pfostenreihe also ~30 cm (Pfostenmitte) vor der Wand IM BODEN — KEINE Stufe
+    #  - Hausseite: die Pergola steht jetzt 29,5 cm von der Wand weg, die hausseitige
+    #    Pfostenreihe also ~33,5 cm (Pfostenmitte) vor der Wand IM BODEN — KEINE Stufe
     #    mehr. Fundament wie vorne: Pfeiler monolithisch bis Plattenoberkante gießen
     #    (>= ~15 cm für Betondeckung der Stange). Der Pfosten landet damit etwa im
     #    bestehenden Kies-Drainagestreifen / hinter dem 6-cm-Bordstein: Kies dort
@@ -217,25 +218,26 @@ pergola:
 
 surroundings:
   walls:
-    # The pergola sits 26 cm IN FRONT of the BOARD WALL of a Blockbohlen (log-cabin)
+    # The pergola sits 29.5 cm IN FRONT of the BOARD WALL of a Blockbohlen (log-cabin)
     # garden house: horizontal boards 3 cm thick (-> wall thickness 30 mm, the
     # `size` y). It no longer touches the wall — it was pulled off so its house-side
-    # roof edge (y = 2340) butts up AGAINST the garden-house rain gutter rather than
-    # tucking under the eave. PROVISIONAL height (from site photos 2026-06-03, NOT
-    # measured): a low, single-storey building with an eave overhang — not a tall
-    # masonry house. Height is a realistic single-storey placeholder (~2.8 m to the
-    # eave). CONFIRM with a real measurement: the gutter's outboard edge should be
-    # ~26 cm from the wall (so the pergola roof meets it) and the eave/gutter must
-    # clear the pergola roof top (now ~2320 mm at the house side).
+    # roof edge (y = 2305) lands right at the bracket carrying the upper grey fascia
+    # board (so that bracket stays as-is) rather than tucking under the eave.
+    # MEASURED on site 2026-06-22: top of the upper grey fascia board = 245 cm (the
+    # `height` below); underside of that board = underside of the garden-house rain
+    # gutter = 222 cm. The lower grey board will be REMOVED, which frees the 10 cm
+    # the pergola roof was raised by: the pergola's highest point (~2320 mm at the
+    # house side) now passes the old 2220 mm gutter line and stops just under the
+    # upper board.
     #
     # Length: the wall is only drawn as far as the pergola needs it. It ends 5 cm
     # past the pergola's right edge (pergola right = x 2400, so wall right = 2450),
     # but runs long to the LEFT (the steep-path side, x_min) where the beds and the
     # ramp sit against it. Left edge -500, right edge 2450 -> width 2950.
     - name: Hauswand
-      at: [-500, 2600]  # min corner (x, y) — the roof's back edge stops 26 cm short of this
+      at: [-500, 2600]  # min corner (x, y) — the roof's back edge stops 29.5 cm short of this
       size: [2950, 30]  # (x, y) footprint: 30 mm board thickness, ends 5 cm past pergola
-      height: 2800      # provisional single-storey eave height (was 6000 placeholder)
+      height: 2450      # measured: top of the upper grey fascia board (245 cm)
 
   # A sloping path on the LEFT of the pergola, running along x. You walk down it
   # from the left: 1 m high at the far edge, tapering to ground level at the
