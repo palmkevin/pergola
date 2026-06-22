@@ -238,6 +238,21 @@ surroundings:
       at: [-500, 2600]  # min corner (x, y) — the roof's back edge stops 29.5 cm short of this
       size: [2950, 30]  # (x, y) footprint: 30 mm board thickness, ends 5 cm past pergola
       height: 2450      # measured: top of the upper grey fascia board (245 cm)
+    # The garden-house eave / upper grey fascia board (Fasziabrett), drawn ghosted
+    # grey like the wall so you can see how the pergola tucks just under it. It
+    # FLOATS at the roof edge: base z0 = 2320 (= the pergola's highest point, where
+    # the roof passes just below the board) up to 2450 (measured top of the board);
+    # the underside at 2320 is what was freed by removing the LOWER board (its old
+    # underside / the gutter line was at 2220). In y it projects from the wall front
+    # face (2600) out toward the pergola by 29.5 cm, so its outer face (y = 2305)
+    # lands exactly at the pergola's house-side roof edge / the holding bracket. In x
+    # it runs the same length as the wall. (Modelled level for simplicity — the real
+    # board follows the garden-house roof pitch.)
+    - name: Fasziabrett
+      at: [-500, 2305]  # min corner (x, y): outer (pergola-side) face 29.5 cm off the wall
+      z0: 2320          # base height: the pergola roof's high point sits just under this
+      size: [2950, 295] # (x, y): runs the wall length; 29.5 cm deep back to the wall face
+      height: 130       # 2320 -> 2450: the board face left after the lower board is removed
 
   # A sloping path on the LEFT of the pergola, running along x. You walk down it
   # from the left: 1 m high at the far edge, tapering to ground level at the
