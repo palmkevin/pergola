@@ -59,11 +59,35 @@ def _draw_boxes(ax, boxes: Sequence[Box], h: int, v: int, nearness: Callable[[Bo
             continue
         st = style.style_for(b.category)
         alpha = ghost_alpha if b.category in ghost else style.ALPHA.get(b.category, 1.0)
+        zo = 2 + i * 1e-3
         ax.add_patch(Polygon(
             poly, closed=True,
             facecolor=st["face"], edgecolor=st["edge"], alpha=alpha,
-            linewidth=style.EDGE_WIDTH, zorder=2 + i * 1e-3,
+            linewidth=style.EDGE_WIDTH, zorder=zo,
         ))
+        _draw_cladding(ax, b, h, v, zo + 0.5e-3)
+
+
+def _draw_cladding(ax, b, h, v, zorder):
+    """Light horizontal board-course lines across a cladded wall face (Blockbohlen).
+
+    Only drawn in an elevation (v == Z) and only when the face is seen broadside —
+    i.e. the wall's screen-horizontal extent is at least its depth — so the side
+    elevation (wall seen edge-on as a 30 mm strip) gets none. The lines sit just
+    above the wall fill but below the pergola, so the structure stays in front."""
+    bh = getattr(b, "board_height", 0.0)
+    if bh <= 0 or v != Z:
+        return
+    depth = 3 - h - v                      # the remaining (into-screen) axis
+    if b.size[h] < b.size[depth]:          # edge-on -> nothing meaningful to draw
+        return
+    h0, h1 = float(b.min[h]), float(b.max[h])
+    z0, z1 = float(b.min[Z]), float(b.max[Z])
+    z = z0 + bh
+    while z < z1 - 1e-6:
+        ax.plot([h0, h1], [z, z], color=style.CLADDING_COLOR, lw=style.CLADDING_LW,
+                alpha=style.CLADDING_ALPHA, zorder=zorder, solid_capstyle="butt")
+        z += bh
 
 
 def _hdim(ax, x1: float, x2: float, y: float, feat_y: float, text: str | None = None):
@@ -305,7 +329,7 @@ def _render_elevation(elements, cfg: Config, *, h, v, nearness, title, subtitle,
 
     # Surroundings are ghosted so the pergola is never hidden behind a tall wall.
     _draw_boxes(ax, elements, h=h, v=v, nearness=nearness,
-                ghost=frozenset({"wall", "building"}))
+                ghost=frozenset({"wall", "fascia", "building"}))
 
     # Pergola extents along the horizontal axis of this elevation.
     ph0 = pg.origin[h] if h in (X, Y) else 0.0

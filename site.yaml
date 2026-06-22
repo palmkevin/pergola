@@ -238,24 +238,39 @@ surroundings:
       at: [-500, 2600]  # min corner (x, y) — the roof's back edge stops 29.5 cm short of this
       size: [2950, 30]  # (x, y) footprint: 30 mm board thickness, ends 5 cm past pergola
       height: 2450      # measured: top of the upper grey fascia board (245 cm)
-    # The garden-house eave / grey fascia block (Fasziabrett), drawn ghosted grey
-    # like the wall so you can see how the pergola tucks just under it. Drawn at its
-    # FULL EXISTING height — the whole block stays on the house; only the LOWER board
-    # is removed on site so the pergola can come up into that freed space and butt up
-    # right under the UPPER board. So it FLOATS at the roof edge from base z0 = 2220
-    # (= underside of the lower board / the gutter line, 222 cm) up to 2450 (measured
-    # top of the upper board, 245 cm). The pergola's highest point (2320 mm) lands at
-    # the lower/upper-board boundary — i.e. just under the upper board, in the space
-    # the removed lower board used to occupy. In y it projects from the wall front
-    # face (2600) out toward the pergola by 29.5 cm, so its outer face (y = 2305)
-    # lands exactly at the pergola's house-side roof edge / the holding bracket. In x
-    # it runs the same length as the wall. (Modelled level for simplicity — the real
-    # board follows the garden-house roof pitch.)
-    - name: Fasziabrett
+      board_height: 190 # the wall is built of horizontal Blockbohlen (log boards) — draw
+                        # them lightly as a wood texture: one faint horizontal course line
+                        # every 190 mm (the indicative visible board face; adjust to the
+                        # real board height if known). The wall itself is shown in a soft
+                        # off-white (blanc cassé), the lines only ganz leicht so they hint
+                        # at the cladding without competing with the pergola.
+    # The garden-house eave fascia — the TWO grey boards (Faszienbretter) of the
+    # eave block, drawn ghosted GREY (kind: fascia) and set apart from the off-white
+    # Blockbohlen wall, so you can see how the pergola tucks just under them. Both
+    # boards are drawn at their FULL EXISTING height; on site only the LOWER board is
+    # removed so the pergola can come up into that freed space and butt up right under
+    # the UPPER board. Together they FLOAT at the roof edge from base z0 = 2220 (=
+    # underside of the lower board / the gutter line, 222 cm) up to 2450 (measured top
+    # of the upper board, 245 cm). The boundary between the two boards is the pergola's
+    # highest point (2320 mm): the lower board 2220 -> 2320, the upper board 2320 ->
+    # 2450 — so the pergola's top lands exactly at the board joint, just under the
+    # upper board, in the space the removed lower board used to occupy. In y both
+    # project from the wall front face (2600) out toward the pergola by 29.5 cm, so
+    # their outer face (y = 2305) lands at the pergola's house-side roof edge / the
+    # holding bracket. In x they run the same length as the wall. (Modelled level for
+    # simplicity — the real boards follow the garden-house roof pitch.)
+    - name: Fasziabrett (unten)
+      kind: fascia      # grey eave board, drawn apart from the off-white Blockbohlen wall
       at: [-500, 2305]  # min corner (x, y): outer (pergola-side) face 29.5 cm off the wall
-      z0: 2220          # base height: underside of the lower board = gutter line (222 cm)
+      z0: 2220          # base: underside of the lower board = gutter line (222 cm)
       size: [2950, 295] # (x, y): runs the wall length; 29.5 cm deep back to the wall face
-      height: 230       # 2220 -> 2450: the full old fascia (lower board removed on site)
+      height: 100       # 2220 -> 2320: lower board (removed on site; drawn for reference)
+    - name: Fasziabrett (oben)
+      kind: fascia
+      at: [-500, 2305]
+      z0: 2320          # base: the board joint = pergola's highest point (232 cm)
+      size: [2950, 295]
+      height: 130       # 2320 -> 2450: upper board (stays; pergola butts up under it)
 
   # A sloping path on the LEFT of the pergola, running along x. You walk down it
   # from the left: 1 m high at the far edge, tapering to ground level at the

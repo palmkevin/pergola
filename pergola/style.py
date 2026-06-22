@@ -20,7 +20,12 @@ CATEGORY_STYLE = {
     "gutter":   {"face": "#9aa3a8", "edge": "#5d666b"},
     "rod":      {"face": "#6e7377", "edge": "#43484b"},
     "curtain":  {"face": "#e7ddc9", "edge": "#c7bba0"},
-    "wall":     {"face": "#cfcfcf", "edge": "#7a7a7a"},
+    # Hauswand = Blockbohlen-Bretterwand des Gartenhauses, in gebrochenem Weiß
+    # (blanc cassé); die einzelnen Bohlen werden zusätzlich als feine Linien
+    # eingezeichnet (siehe board_height / CLADDING_* unten).
+    "wall":     {"face": "#efe9dc", "edge": "#cdbfa3"},
+    # Faszienbretter der Gartenhaus-Traufe — in Grau, vom hellen Bohlenton abgesetzt.
+    "fascia":   {"face": "#b4b4b4", "edge": "#787878"},
     "building": {"face": "#dde3e8", "edge": "#8a949c"},
     "bed":      {"face": "#9cae6e", "edge": "#5e6b3e"},
     "path":     {"face": "#cfc8ba", "edge": "#9a9182"},
@@ -39,6 +44,7 @@ CATEGORY_ZORDER = {
     "step": 1,
     "bed": 1,
     "wall": 1,
+    "fascia": 1,
     "building": 1,
     "post": 2,
     "anchor": 3,    # steel shoe at the post foot, drawn over the post base
@@ -57,6 +63,12 @@ CATEGORY_ZORDER = {
 EDGE_WIDTH = 0.6
 GROUND_FACE = "#f1ede3"
 GROUND_EDGE = "#cfc7b4"
+
+# Blockbohlen-Fugen: feine, helle Linien quer über eine Bretterwand (board_height),
+# bewusst zurückhaltend ("nur ganz leicht"), damit sie die Pergola nicht stören.
+CLADDING_COLOR = "#c7b48f"
+CLADDING_LW = 0.4
+CLADDING_ALPHA = 0.45
 
 # Dimension lines.
 DIM_COLOR = "#13476b"

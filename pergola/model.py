@@ -207,6 +207,14 @@ class Block:
     size: Tuple[float, float]
     height: float
     z0: float = 0.0
+    # Optional category override (walls only): e.g. "fascia" so a garden-house
+    # fascia board is styled/grouped apart from the plain "wall". "" -> use the
+    # default category for the section it came from.
+    category: str = ""
+    # Visible cladding board-course height (mm), e.g. Blockbohlen on a log-cabin
+    # wall. When > 0 the elevations draw light horizontal course lines across the
+    # face. 0 -> no cladding lines (plain face).
+    board_height: float = 0.0
 
 
 @dataclass
@@ -558,6 +566,8 @@ def _block(item, P, L, kind: str) -> Block:
         size=P(_require(item, "size", f"{kind} '{name}'"), f"{kind}.size"),
         height=L(_require(item, "height", f"{kind} '{name}'"), f"{kind}.height", positive=True),
         z0=L(item.get("z0", 0), f"{kind}.z0"),
+        category=(str(item["kind"]) if item.get("kind") is not None else ""),
+        board_height=L(item.get("board_height", 0), f"{kind}.board_height"),
     )
 
 
