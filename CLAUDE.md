@@ -64,6 +64,17 @@ For solid-model changes, also re-import `output/model.step` with `build123d.impo
 -check the solid count, total volume and bounding box against the box model (a quick way to catch a
 member that failed to become a watertight solid).
 
+**Verifying in the cloud / web sandbox.** The remote (Claude Code on the web) environment has **no
+Docker daemon** (`docker build` / `run.sh` fail) and its host Python has none of the deps, so the
+flow above does not run there. Instead: make a venv and install **only** the 2D stack —
+`matplotlib numpy PyYAML Jinja2` — then render the views directly off the box model (import
+`pergola.build` + `pergola.views2d` / `pergola.view3d`, call `render_plan` / `render_front` /
+`render_side` / `render_iso`, `savefig`) and **read those PNGs**. Deliberately **skip `solid.py`**
+(and `generate.py`, which imports it): `build123d` needs the OpenCascade CAD kernel + the `libgl1`
+/`libglu1`/`libxrender1`/… system libs, which are not present. The real STEP/STL/GLB export is
+therefore left to the **GitHub Actions build on push to `main`** (`deploy.yml`), which is the only
+place the solid model is validated in this setup.
+
 ## The data interface — `site.yaml`
 
 The one source of truth. Metric (`units: mm|cm|m`, normalised to mm internally). Coordinates:
