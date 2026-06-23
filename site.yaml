@@ -156,11 +156,18 @@ pergola:
                         # glass-like look we want, but tougher and UV-stabler than solid
                         # PVC (which DIY stores don't stock flat/clear anyway). 6 mm spans
                         # the ~740 mm rafter field with ease (solid sheets allow ~900 mm).
-    material: Polycarbonat (massiv)   # cover material, shown in the Materialliste. Buy as
-                        # 6 mm glasklare PC-Massivplatte, cut to 800 x ~1837 (Bauhaus
-                        # Zuschnitt or a plastics cut-to-size shop). The ~1837 is the
-                        # slope length: 1780 mm horizontal roof depth + 50 mm front
-                        # overhang (front_overhang below) -> 1830 mm horizontal, / cos 5deg.
+    material: Polycarbonat (massiv)   # cover material, shown in the Materialliste.
+                        # NOMINAL panel size (= structure raster, the COLD reference):
+                        # 800 (x) x ~1837 (slope length) x 6 mm. The ~1837 is the slope
+                        # length: 1780 mm horizontal roof depth + 50 mm front overhang
+                        # (front_overhang below) -> 1830 mm horizontal, / cos 5deg.
+                        # ----------------------------------------------------------------
+                        # ORDER / CUT spec (what to actually buy): 3 x glasklare 6 mm
+                        # PC-Massivplatte, each cut ~5 mm UNDER nominal -> 795 x 1832 mm
+                        # (Bauhaus Zuschnitt or a plastics cut-to-size shop). The 5 mm is
+                        # the thermal expansion gap (see THERMAL EXPANSION below); the
+                        # H-/edge profiles (50/40 mm wide) cover the resulting fuge. Do
+                        # NOT cut a tight 800/1837 — solid PC must have room to grow.
     # Panelise the cover into equal panels ~this wide across x. 2400 / 800 = 3
     # equal panels of exactly 800 mm; the 2 interior joints (x = 800 and 1600)
     # each land on a rafter (build.py places the rafters under the joints) and are
@@ -178,13 +185,16 @@ pergola:
       width: 40         # profile width across x at each side edge
       material: Aluminium
     # THERMAL EXPANSION (not a geometry change, a fitting detail): solid PC moves
-    # ~0.065 mm/m/K — about 4 mm across each 800 mm panel and ~9 mm over the 1.92 m
-    # length across a ~75 K summer/winter swing. The 3 x 800 = 2400 here is the COLD
-    # nominal (= structure width); the play lives in the profiles, NOT the panel
-    # widths: use oversized screw holes (+3-4 mm) with EPDM washers, don't push the
-    # panels fully home in the profile channels (~3-5 mm/m gap), and let the eave
-    # oversail freely into the gutter. Often the panels are ordered ~3-5 mm under
-    # 800 so the gap is guaranteed; the profiles cover it.
+    # ~0.065 mm/m/K — about 4 mm across each 800 mm panel and ~9 mm over the ~1.84 m
+    # slope length across a ~75 K summer/winter swing. The 3 x 800 = 2400 here is the
+    # COLD nominal (= structure width); the play lives in the profiles, NOT the
+    # structure raster. That is why the cut spec above is 795 x 1832 (~5 mm under the
+    # 800 x 1837 nominal): the ~4 mm width / ~9 mm length growth then has room.
+    # Additionally: use oversized screw holes (+3-4 mm) with EPDM washers, centre each
+    # panel in its 800 field (~2.5 mm clearance per side), don't push the panels fully
+    # home in the profile channels, and let the eave oversail freely into the gutter
+    # (front_overhang). The H-Profil still overlaps each 795 panel edge by ~20 mm, so
+    # the joint stays clamped and weather-tight despite the gap.
     tilt_deg: 5         # pitch: slopes DOWN toward the front, to shed rain/snow. 5 deg
                         # is the practical MINIMUM for solid PVC/PC/acrylic panels
                         # (manufacturers: >=5 deg ~ 9 %; 7-15 deg gives better self-
