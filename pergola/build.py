@@ -293,10 +293,15 @@ def build_pergola(pg: Pergola) -> List[Box]:
         # category default. Panels span the slope (y) full length; joints run
         # down-slope in x and are placed at panel_joints (each over a rafter).
         pmat = roof.material or ""
+        # The cover (panels + profiles) oversails the front beam by
+        # ``front_overhang`` so the drip line falls INTO the gutter trough, not on
+        # its rear lip. The slope plane simply continues forward (roof_base is
+        # linear in y); the structure (beams/rafters) stays put.
+        cover_y0 = roof_y0 - roof.front_overhang
         edges = [ox] + list(panel_joints) + [ox + w]   # panel boundaries in x
         for px0, px1 in zip(edges[:-1], edges[1:]):
-            boxes.append(_slab(px0, px1, roof_y0, roof_y1,
-                               roof_base(roof_y0), roof_base(roof_y1),
+            boxes.append(_slab(px0, px1, cover_y0, roof_y1,
+                               roof_base(cover_y0), roof_base(roof_y1),
                                roof.thickness, "glass", material=pmat))
         # Connecting H-Profil straddling each interior joint, running down the
         # slope over its rafter; drawn a little proud of the panels (a raised
@@ -305,8 +310,8 @@ def build_pergola(pg: Pergola) -> List[Box]:
         cap = roof.thickness + 6.0                      # sits ~6 mm above the panels
         jmat = roof.profile_material or ""
         for jx in panel_joints:
-            boxes.append(_slab(jx - pw / 2, jx + pw / 2, roof_y0, roof_y1,
-                               roof_base(roof_y0), roof_base(roof_y1),
+            boxes.append(_slab(jx - pw / 2, jx + pw / 2, cover_y0, roof_y1,
+                               roof_base(cover_y0), roof_base(roof_y1),
                                cap, "profile", material=jmat))
         # Edge/closure profiles along the two side roof edges, clamping each
         # outer panel edge onto the side beam (the front edge drains into the
@@ -315,8 +320,8 @@ def build_pergola(pg: Pergola) -> List[Box]:
             ew = roof.edge_profile_width
             emat = roof.edge_profile_material or ""
             for ex0 in (ox, ox + w - ew):
-                boxes.append(_slab(ex0, ex0 + ew, roof_y0, roof_y1,
-                                   roof_base(roof_y0), roof_base(roof_y1),
+                boxes.append(_slab(ex0, ex0 + ew, cover_y0, roof_y1,
+                                   roof_base(cover_y0), roof_base(roof_y1),
                                    cap, "edge_profile", material=emat))
     elif roof.kind != "open":
         sw, sh = roof.slat_width, roof.slat_height

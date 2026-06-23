@@ -157,8 +157,10 @@ pergola:
                         # PVC (which DIY stores don't stock flat/clear anyway). 6 mm spans
                         # the ~740 mm rafter field with ease (solid sheets allow ~900 mm).
     material: Polycarbonat (massiv)   # cover material, shown in the Materialliste. Buy as
-                        # 6 mm glasklare PC-Massivplatte, cut to 800 x ~1915 (Bauhaus
-                        # Zuschnitt or a plastics cut-to-size shop).
+                        # 6 mm glasklare PC-Massivplatte, cut to 800 x ~1837 (Bauhaus
+                        # Zuschnitt or a plastics cut-to-size shop). The ~1837 is the
+                        # slope length: 1780 mm horizontal roof depth + 50 mm front
+                        # overhang (front_overhang below) -> 1830 mm horizontal, / cos 5deg.
     # Panelise the cover into equal panels ~this wide across x. 2400 / 800 = 3
     # equal panels of exactly 800 mm; the 2 interior joints (x = 800 and 1600)
     # each land on a rafter (build.py places the rafters under the joints) and are
@@ -189,6 +191,12 @@ pergola:
                         # cleaning/drainage). Do NOT go below 5 deg with a solid panel:
                         # standing water, dirt and leak risk. (Was 6 deg.)
     gutter: true        # rain gutter along the low (front, house-away) eave
+    front_overhang: 50  # the PC panels oversail the front beam by 5 cm so the drip
+                        # line falls INTO the gutter trough (trough y 405..525, the
+                        # panel front edge moves from y 525 to 475, ~centred over the
+                        # trough) instead of on its rear lip. Lengthens each panel by
+                        # 50/cos5deg ~ 50 mm along the slope. Only the cover (panels +
+                        # H-/edge profiles) overhangs; the beams/rafters/gutter stay put.
     # The fields below only apply to louvered/slatted roofs:
     slat:
       width: 80
