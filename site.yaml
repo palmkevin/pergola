@@ -130,7 +130,7 @@ pergola:
                         # placed UNDER the panel joints instead (x = 800 and 1600): 2
                         # interior rafters, 3 fields of 800 mm. Each panel edge then
                         # rests on a support and each joint is carried by a rafter. The
-                        # clear field (~690-740 mm) stays within a 6 mm solid PVC
+                        # clear field (~690-740 mm) stays within a 6 mm solid PC
                         # sheet's allowable support spacing (~900 mm).
     direction: y        # rafters span along y (down the slope)
 
@@ -141,9 +141,18 @@ pergola:
                         # glass-like look we want, but tougher and UV-stabler than solid
                         # PVC (which DIY stores don't stock flat/clear anyway). 6 mm spans
                         # the ~740 mm rafter field with ease (solid sheets allow ~900 mm).
-    material: Polycarbonat (massiv)   # cover material, shown in the Materialliste. Buy as
-                        # 6 mm glasklare PC-Massivplatte, cut to 800 x ~2090 (Bauhaus
-                        # Zuschnitt or a plastics cut-to-size shop).
+    material: Polycarbonat (massiv)   # cover material, shown in the Materialliste.
+    # --- BEZUGSQUELLE / gewähltes Produkt -------------------------------------
+    # dokter-plexiglas.nl "Polycarbonaat Helder 6 mm" — massieve (compact) PC-Platte,
+    #   glasklar, UV-Schutz BEIDSEITIG (vergilbt/versprödet nicht), ~93 % Licht,
+    #   ~7,2 kg/m² (= Vollmaterial; eine 6-mm-Hohlkammerplatte wöge nur ~1,3 kg/m²).
+    #   https://www.dokter-plexiglas.nl/polycarbonaat-helder-6mm  (Zuschnitt gratis)
+    # Bestellmaß: 3 Platten je 795 mm breit (= 800 nominal - 5 mm Dehnungsluft, s.u.)
+    #   x ~2090 mm lang (= Gefälle-Länge 2083 + Reserve). UV-Seite nach OBEN einbauen.
+    #   ACHTUNG: eine 1830-mm-Platte deckt das Gefälle NICHT (vorn an der Traufe
+    #   fehlen ~25 cm) -> Länge ~2090 mm bestellen, NICHT 1830.
+    # Preis-Richtwert: ~410 EUR inkl. Versand für alle 3 Platten (Stand 2026-06).
+    # --------------------------------------------------------------------------
     # Panelise the cover into equal panels ~this wide across x. 2400 / 800 = 3
     # equal panels of exactly 800 mm; the 2 interior joints (x = 800 and 1600)
     # each land on a rafter (build.py places the rafters under the joints) and are
