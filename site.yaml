@@ -74,9 +74,24 @@ pergola:
     # rectangular post.)
     rows_y_from_wall: [335, 2035]   # post-row centre distances from the house wall
     footing:
-      size: 300         # square concrete footing under each post — BOTH rows now,
-      depth: 600        # since the house-side row stands in the ground 26 cm off the
-                        # wall (no longer on a foundation step against the wall)
+      # Square concrete pier under each post — BOTH rows now, since the house-side
+      # row stands in the ground 29.5 cm off the wall (no longer on a foundation step
+      # against the wall). DIMENSIONING (frost is NOT the driver here — these are
+      # not buried to the 80 cm frost line; the piers pour monolithic up to slab
+      # level and the timber stays clear of the ground via the U-anchor air gap):
+      #  - Bearing/Druck is irrelevant: each post carries only ~1 kN, any size holds.
+      #  - The governing load is WIND UPLIFT/Sog on the light mono-pitch roof
+      #    (~0.85 kN/post) plus overturning — resisted by the pier MASS and, mostly,
+      #    by the whole braced frame acting as one rigid box over its 2.4 x 1.7 m
+      #    footprint (one corner down, the opposite up), not by each pier alone.
+      #  - DEPTH gives mass + the anti-tip lever arm AND must house the ~200 mm
+      #    cast-in ribbed anchor rod with cover below it -> ~300 mm is the hard floor,
+      #    450 mm a solid, low-reserve-but-adequate choice (~97 kg/pier).
+      #  - SIZE (plan) is set by concrete cover around the anchor: 80 mm post + ~2x50 mm
+      #    cover -> ~180-200 mm minimum; 250 mm is comfortable. (Was 300 x 600 mm,
+      #    robust but generous; trimmed to save concrete/excavation.)
+      size: 250         # 25 x 25 cm pier (cover around the 80 mm post + cast-in rod)
+      depth: 450        # 45 cm: anchor-rod embedment + uplift mass + anti-tip lever
     # Pfosten-Verankerung: verzinkter U-Stützenfuß (Alberts, zum Einbetonieren)
     # unter JEDEM Pfosten. Real ein 71-mm-U mit gerippter Betonier-Rundstange
     # (~16 mm / 200 mm), in den Beton gegossen; CE ETA-10/0210. Der 80-mm-Pfosten
