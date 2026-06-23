@@ -119,6 +119,10 @@ class Roof:
     tilt_deg: float     # roof pitch; slopes DOWN toward the front (y-min), house
                         # side (y-max) high. clear_height is the house-side value.
     gutter: bool        # add a rain gutter along the low (front) eave
+    # Front overhang of the rigid cover (mm): how far the panels (and their
+    # profiles) oversail the front beam/eave, so the drip line falls INTO the
+    # gutter trough rather than on its rear lip. 0 -> flush with the front beam.
+    front_overhang: float = 0.0
     # Material name of the rigid cover (only used when kind == "glass"); shown in
     # the Materialliste. None -> fall back to the generic "Glas / PVC-Platte".
     material: Optional[str] = None
@@ -430,6 +434,7 @@ def load_config(path: str) -> Config:
         thickness=L(ro.get("thickness", 10), "pergola.roof.thickness", positive=True),
         tilt_deg=tilt,
         gutter=bool(ro.get("gutter", False)),
+        front_overhang=L(ro.get("front_overhang", 0), "pergola.roof.front_overhang"),
         material=(str(ro["material"]) if ro.get("material") is not None else None),
         panel_width=(L(panel_width, "pergola.roof.panel_width", positive=True)
                      if panel_width is not None else None),
