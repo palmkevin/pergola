@@ -14,13 +14,19 @@ overlaps have to be cut away, so this module derives — from the same
 Everything here is pure matplotlib/numpy off the box model + config numbers — no
 build123d (kept to ``solid.py``), like the rest of the drawing code.
 
-The flush geometry (see ``build.py``): the rafter top is flush with the beam
-top, so the rafter occupies the top ``rafter.height`` of the taller beam. To
-keep the tops flush while leaving each member as much section as possible, that
-overlap is split between the two: a channel ``DB`` deep into the beam top and a
-channel ``DR`` deep into the rafter underside, with ``DB + DR == rafter.height``.
-We split it evenly by default; bias it (keeping the sum) to favour the
-load-bearing member.
+The flush geometry (see ``build.py``): each rafter crosses OVER the front/house
+beams and ends flush with their outer faces (no overhang). Its top is flush with
+the beam top, so it occupies the top ``rafter.height`` of the taller beam. To
+keep the tops flush, that overlap is split between the two as a cross-lap: a
+channel ``DB`` deep into the beam top and a channel ``DR`` deep into the rafter
+underside, with ``DB + DR == rafter.height``.
+
+The split is biased to PROTECT the beam: ``DB`` is capped at a quarter of the
+beam depth (``DB = min(rafter.height/2, beams.height/4)``), so the 120 mm ring
+beam keeps ≥ 75 % of its depth. The remainder goes into the rafter — and that is
+"free" structurally, because the rafter is notched exactly at its END, i.e. over
+its support, where its bending moment is ~zero. For the sample (rafter 80, beam
+120) this gives DB = 30 into the beam (leaving 90) and DR = 50 into the rafter.
 """
 from __future__ import annotations
 
@@ -110,73 +116,93 @@ def _iso_arrow(ax, x, y, z0, z1, text):
 # --------------------------------------------------------------------------- #
 #  Detail 1: the cross-lap (Kämmung) where a flush rafter crosses a beam
 # --------------------------------------------------------------------------- #
+def _lap_split(rh: float, bh: float):
+    """Cross-lap depths (DB into beam top, DR into rafter underside), DB+DR=rh.
+
+    DB is capped at a quarter of the beam depth so the load-bearing ring beam
+    keeps >=75% of its section; the remainder goes into the rafter, which is
+    notched at its zero-moment support end where depth costs nothing.
+    """
+    db = round(min(rh / 2.0, bh / 4.0))   # channel depth into the beam top
+    dr = round(rh) - db                    # channel depth into the rafter underside
+    return db, dr
+
+
 def _render_kaemmung(cfg: Config):
     pg = cfg.pergola
     bw, bh = pg.beams.width, pg.beams.height
     rw, rh = pg.rafters.width, pg.rafters.height
-    tilt = pg.roof.tilt_deg
-    # Split the rh-deep overlap evenly between the two members (tops stay flush).
-    db = round(rh / 2.0)       # channel depth into the beam top
-    dr = rh - db               # channel depth into the rafter underside
-    bear = bh - db             # bearing plane, above the beam underside
+    db, dr = _lap_split(rh, bh)
+    bear = bh - db             # bearing plane (notch floor), above the beam underside
 
     fig, axs = plt.subplots(1, 2, figsize=(12.0, 6.2), dpi=DPI)
     fig.suptitle("Holzverbindung 1 — Kreuzüberblattung (Kämmung): Sparren kreuzt Ringbalken",
                  fontsize=style.TITLE_FONTSIZE, fontweight="bold", x=0.04, ha="left")
-    fig.text(0.04, 0.92, f"Sparren {_fmt(rw)}×{_fmt(rh)} läuft quer ÜBER den Balken "
-             f"{_fmt(bw)}×{_fmt(bh)}; beide werden eingeschnitten, Oberkanten bündig (eine "
-             f"Dachebene) · Dachneigung {_fmt(tilt)}° · Maße in {cfg.units}",
+    fig.text(0.04, 0.92, f"Sparren {_fmt(rw)}×{_fmt(rh)} kreuzt den Balken {_fmt(bw)}×{_fmt(bh)} "
+             f"und endet bündig an dessen Außenkante — kein Überstand · Maße in {cfg.units}",
              fontsize=style.LABEL_FONTSIZE, color="#555", ha="left")
 
-    Lb = bw * 4.0                  # beam length shown (runs in x)
-    Ry0, Ry1 = -bw * 1.1, bw + bw * 1.1   # rafter run in y (overhangs both sides)
+    Lb = bw * 4.0                  # beam length shown (runs in x); beam spans y [0, bw]
+    Rin = bw + bw * 2.0            # rafter runs from the OUTER face (y=0) into the bay (y=Rin)
     rx0, rx1 = (Lb - rw) / 2, (Lb + rw) / 2  # rafter x-band, centred on the beam
-    nx0, nx1 = rx0, rx1            # beam top notch footprint in x (= rafter width)
 
     # ---- Panel 1: exploded — saw these chunks out --------------------------
     ax = axs[0]
     _panel(ax, "1) Was wird ausgesägt? (auseinandergezogen)")
     # Beam, with the red ghost chunk removed from its TOP (rw wide × bw deep × db).
     _box3d(ax, 0, Lb, 0, bw, 0, bh, _BEAM["face"], _BEAM["edge"], z=2)
-    _ghost3d(ax, nx0, nx1, 0, bw, bh - db, bh)
-    pc = _iso((nx0 + nx1) / 2, bw, bh)
-    ax.annotate(f"Balken: oben {_fmt(rw)}×{_fmt(bw)} ×\nTiefe {_fmt(db)} heraus",
-                pc, (pc[0] + bw * 0.4, pc[1] + bh * 0.5), fontsize=7.5, color="#c0392b",
+    _ghost3d(ax, rx0, rx1, 0, bw, bh - db, bh)
+    pc = _iso((rx0 + rx1) / 2, bw, bh)
+    ax.annotate(f"Balken: oben {_fmt(rw)}×{_fmt(bw)} ×\nnur Tiefe {_fmt(db)} heraus\n"
+                f"(bleibt {_fmt(bh - db)} von {_fmt(bh)})",
+                pc, (pc[0] + bw * 0.9, pc[1] + bh * 0.35), fontsize=7.5, color="#c0392b",
                 arrowprops=dict(arrowstyle="->", color="#c0392b"))
-    # Rafter, lifted above, with the ghost chunk removed from its UNDERSIDE.
+    # Rafter, lifted above; notch removed from its UNDERSIDE at the END (y 0..bw).
     gap = bh * 1.7
     rz0, rz1 = bh + gap, bh + gap + rh
-    _box3d(ax, rx0, rx1, Ry0, Ry1, rz0, rz1, _RAF["face"], _RAF["edge"], z=4)
+    _box3d(ax, rx0, rx1, 0, Rin, rz0, rz1, _RAF["face"], _RAF["edge"], z=4)
     _ghost3d(ax, rx0, rx1, 0, bw, rz0, rz0 + dr)
-    pr = _iso(rx0, bw, rz0)
-    ax.annotate(f"Sparren: unten {_fmt(rw)}×{_fmt(bw)}\n× Tiefe {_fmt(dr)} heraus",
-                pr, (pr[0] - bw * 1.5, pr[1] - bh * 0.1), fontsize=7.5, color="#c0392b",
+    pr = _iso(rx0, 0, rz0)
+    ax.annotate(f"Sparren: unten {_fmt(rw)}×{_fmt(bw)}\n× Tiefe {_fmt(dr)} heraus\n"
+                f"(am SparrenENDE, dort\nkein Biegemoment)",
+                pr, (pr[0] - bw * 1.6, pr[1] - bh * 0.2), fontsize=7.5, color="#c0392b",
                 ha="right", arrowprops=dict(arrowstyle="->", color="#c0392b"))
     _iso_arrow(ax, (rx0 + rx1) / 2, bw * 0.5, rz0 - bh * 0.2, bh + bh * 0.25, "einsetzen")
-    ax.set_xlim(-bw * 3.4, Lb + bw * 1.4); ax.set_ylim(-bh * 0.5, rz1 + bh * 0.7)
+    ax.set_xlim(-bw * 3.4, Lb + bw * 2.4); ax.set_ylim(-bh * 0.5, rz1 + bh * 0.7)
 
-    # ---- Panel 2: assembled — tops flush -----------------------------------
+    # ---- Panel 2: assembled — tops flush, rafter end flush with outer face --
     ax = axs[1]
-    _panel(ax, "2) Zusammengesteckt — Oberkanten bündig (= eine Dachebene)")
-    # Draw back -> front so the rafter sits visibly IN the beam's top channel.
-    # Overhangs are the full rafter depth (rh, underside at bh-rh); only where it
-    # crosses the beam is the bottom dr notched away, leaving it from `bear` up.
-    _box3d(ax, rx0, rx1, bw, Ry1, bh - rh, bh, _RAF["face"], _RAF["edge"], z=3)       # back overhang
+    _panel(ax, "2) Zusammengesteckt — Oberkanten bündig, Sparrenende bündig")
+    # Draw back -> front. The rafter continues into the bay (y bw..Rin) at full
+    # depth; over the beam (y 0..bw) its underside is notched up to `bear`; its
+    # end face sits at y=0, flush with the beam's outer face — no overhang.
+    _box3d(ax, rx0, rx1, bw, Rin, bh - rh, bh, _RAF["face"], _RAF["edge"], z=3)       # bay continuation
     _box3d(ax, 0, Lb, 0, bw, 0, bh, _BEAM["face"], _BEAM["edge"], z=4)                # beam
-    _box3d(ax, rx0, rx1, 0, bw, bear, bh, _RAF["face"], _RAF["edge"], z=6)            # crossing (in channel)
-    _box3d(ax, rx0, rx1, Ry0, 0, bh - rh, bh, _RAF["face"], _RAF["edge"], z=8)        # front overhang
+    _box3d(ax, rx0, rx1, 0, bw, bear, bh, _RAF["face"], _RAF["edge"], z=6)            # crossing (in notch)
     # tops-flush line across the top
     fa, fb = _iso(0, 0, bh), _iso(Lb, 0, bh)
     ax.plot([fa[0], fb[0]], [fa[1], fb[1]], color="#1e8449", lw=1.6, zorder=10)
     ax.annotate("Oberkanten bündig", _iso(Lb * 0.5, 0, bh),
                 (_iso(Lb, 0, bh)[0] + bw * 0.2, _iso(Lb, 0, bh)[1] + bh * 0.6),
                 fontsize=8, color="#1e8449", arrowprops=dict(arrowstyle="->", color="#1e8449"))
-    # the bearing shoulder: the rafter rests on the channel floor at z = bear
-    s0 = _iso(rx0, 0, bear)
+    # rafter end flush with the beam's outer (front, y=0) face — no overhang
+    ef = _iso((rx0 + rx1) / 2, 0, (bear + bh) / 2)
+    ax.annotate("Sparrenende bündig mit\nBalken-Außenkante\n(kein Überstand)", ef,
+                (ef[0] - bw * 0.4, ef[1] - bh * 1.4), ha="center",
+                fontsize=7.5, color="#1e8449", arrowprops=dict(arrowstyle="->", color="#1e8449"))
+    # the bearing shoulder: the rafter rests on the notch floor at z = bear
+    s0 = _iso(rx1, bw, bear)
     ax.annotate(f"Sparren liegt auf dem\nKanalboden auf (z = {_fmt(bear)})",
-                s0, (s0[0] - bw * 2.6, s0[1] + bh * 1.7), ha="center",
+                s0, (s0[0] + bw * 0.6, s0[1] + bh * 1.4), ha="left",
                 fontsize=7.5, color="#444", arrowprops=dict(arrowstyle="->", color="#444"))
-    ax.set_xlim(-bw * 3.4, Lb + bw * 1.6); ax.set_ylim(-bh * 0.5, bh + bw + bh * 0.9)
+    # rafter runs on into the bay (inner side)
+    be = _iso((rx0 + rx1) / 2, Rin, bh)
+    ax.annotate("", _iso((rx0 + rx1) / 2, Rin + bw * 1.1, bh), be,
+                arrowprops=dict(arrowstyle="-|>", color="#444", lw=1.6))
+    ax.text(_iso((rx0 + rx1) / 2, Rin + bw * 1.1, bh)[0],
+            _iso((rx0 + rx1) / 2, Rin + bw * 1.1, bh)[1] + bh * 0.18,
+            "Sparren läuft ins\nDachfeld weiter", fontsize=7.5, color="#444", ha="center")
+    ax.set_xlim(-bw * 3.4, Lb + bw * 2.8); ax.set_ylim(-bh * 1.4, bh + bw * 2.6)
 
     fig.tight_layout(rect=[0, 0, 1, 0.9])
     return fig
@@ -308,9 +334,10 @@ def _render_locator(elements, cfg: Config):
             ax.add_patch(Rectangle((cx - s, cy - s), 2 * s, 2 * s, fill=False,
                                    color="#1e8449", lw=2.0, zorder=6))
 
-    # Mark the house side (max y), where flush rafters cantilever past the beam.
+    # Note the rafter ends: they cross the front/house beams and stop flush with
+    # the outer faces — no overhang either side.
     lo, hi = bounds(elements)
-    ax.annotate("Hauswand-Seite — Sparren kragen über den Balken hinaus",
+    ax.annotate("Sparren kreuzen Front- und Hausbalken und enden bündig an deren Außenkante",
                 ((lo[X] + hi[X]) / 2, max(cross_y) if cross_y else hi[Y]),
                 ((lo[X] + hi[X]) / 2, hi[Y] + (hi[Y] - lo[Y]) * 0.07),
                 ha="center", fontsize=8, color="#555",
@@ -348,8 +375,9 @@ def render_joinery(elements, cfg: Config) -> List[Tuple[str, str, "plt.Figure", 
 
     pg = cfg.pergola
     rh = pg.rafters.height
-    db = round(rh / 2.0)
-    bear = pg.beams.height - db
+    bh = pg.beams.height
+    db, dr = _lap_split(rh, bh)
+    bear = bh - db
     tilt = pg.roof.tilt_deg
 
     return [
@@ -362,10 +390,14 @@ def render_joinery(elements, cfg: Config) -> List[Tuple[str, str, "plt.Figure", 
          "sind <b>Seitenbalken</b> des Rings, keine Sparren."),
         ("detail_kaemmung", "Detail 1 — Kreuzüberblattung (Sparren × Balken)",
          _render_kaemmung(cfg),
-         f"Aus beiden Hölzern wird ein Kanal ausgenommen, der Sparren fällt von oben ein, "
-         f"die Oberkanten fluchten (eine Dachebene). Die Überlappung von {_fmt(rh)} mm wird "
-         f"geteilt: {_fmt(db)} mm aus der Balkenoberkante + {_fmt(rh - db)} mm aus der "
-         f"Sparrenunterkante; Summe = Sparrenhöhe, also Oberkanten bündig. Auflagerfläche "
+         f"Der Sparren kreuzt den Front-/Hausbalken und <b>endet bündig an dessen "
+         f"Außenkante</b> — kein Überstand. Aus beiden Hölzern wird dafür ein Kanal "
+         f"ausgenommen, der Sparren fällt von oben ein, die Oberkanten fluchten (eine "
+         f"Dachebene). Die Überlappung von {_fmt(rh)} mm wird <b>balkenschonend</b> geteilt: "
+         f"nur {_fmt(db)} mm aus der Balkenoberkante (der {_fmt(bh)}-er Balken behält "
+         f"{_fmt(bh - db)} mm, ≈75 %) + {_fmt(dr)} mm aus der Sparren­unterkante. Der tiefere "
+         f"Schnitt sitzt im Sparren, und zwar genau an seinem <b>Auflager-Ende</b> (dort ist "
+         f"das Biegemoment ~0, kostet also keine Tragfähigkeit). Auflagerfläche "
          f"<b>waagerecht</b> bei z = +{_fmt(bear)} mm schneiden — wegen der {_fmt(tilt)}°-"
          f"Neigung steht der Sparren sonst auf einer Kante."),
         ("detail_corner", "Detail 2 — Eck-Überblattung (Balken × Balken)",
