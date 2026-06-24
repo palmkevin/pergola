@@ -168,6 +168,14 @@ pergola:
                         # the thermal expansion gap (see THERMAL EXPANSION below); the
                         # H-/edge profiles (50/40 mm wide) cover the resulting fuge. Do
                         # NOT cut a tight 800/1837 — solid PC must have room to grow.
+                        # ----------------------------------------------------------------
+                        # BEZUGSQUELLE (gewählt): dokter-plexiglas.nl "Polycarbonaat Helder
+                        # 6 mm" — massieve (compact) PC-Platte, glasklar, UV-Schutz
+                        # BEIDSEITIG (vergilbt/versprödet nicht), ~93 % Licht, ~7,2 kg/m²
+                        # (= Vollmaterial; eine 6-mm-Hohlkammerplatte wöge nur ~1,3 kg/m²).
+                        # 3 Platten 795 x 1832 mm, ~410 EUR inkl. Versand (Stand 2026-06),
+                        # Zuschnitt gratis. (Beidseitig UV -> Einbaurichtung egal.)
+                        # https://www.dokter-plexiglas.nl/polycarbonaat-helder-6mm
     # Panelise the cover into equal panels ~this wide across x. 2400 / 800 = 3
     # equal panels of exactly 800 mm; the 2 interior joints (x = 800 and 1600)
     # each land on a rafter (build.py places the rafters under the joints) and are
