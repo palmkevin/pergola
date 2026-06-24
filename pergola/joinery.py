@@ -21,12 +21,12 @@ keep the tops flush, that overlap is split between the two as a cross-lap: a
 channel ``DB`` deep into the beam top and a channel ``DR`` deep into the rafter
 underside, with ``DB + DR == rafter.height``.
 
-The split is biased to PROTECT the beam: ``DB`` is capped at a quarter of the
-beam depth (``DB = min(rafter.height/2, beams.height/4)``), so the 120 mm ring
-beam keeps ≥ 75 % of its depth. The remainder goes into the rafter — and that is
-"free" structurally, because the rafter is notched exactly at its END, i.e. over
-its support, where its bending moment is ~zero. For the sample (rafter 80, beam
-120) this gives DB = 30 into the beam (leaving 90) and DR = 50 into the rafter.
+The split is biased to PROTECT the beam: the beam-top notch ``DB`` is capped at
+``MAX_BEAM_NOTCH`` mm (35), so the 120 mm ring beam keeps as much depth as it
+can. The remainder goes into the rafter — and that is "free" structurally,
+because the rafter is notched exactly at its END, i.e. over its support, where
+its bending moment is ~zero. For the sample (rafter 80, beam 120) this gives
+DB = 35 into the beam (leaving 85) and DR = 45 into the rafter.
 """
 from __future__ import annotations
 
@@ -116,15 +116,20 @@ def _iso_arrow(ax, x, y, z0, z1, text):
 # --------------------------------------------------------------------------- #
 #  Detail 1: the cross-lap (Kämmung) where a flush rafter crosses a beam
 # --------------------------------------------------------------------------- #
-def _lap_split(rh: float, bh: float):
+MAX_BEAM_NOTCH = 35   # mm — deepest cut allowed into the load-bearing ring beam's top
+
+
+def _lap_split(rh: float):
     """Cross-lap depths (DB into beam top, DR into rafter underside), DB+DR=rh.
 
-    DB is capped at a quarter of the beam depth so the load-bearing ring beam
-    keeps >=75% of its section; the remainder goes into the rafter, which is
-    notched at its zero-moment support end where depth costs nothing.
+    The deeper cut goes into the RAFTER, at its zero-moment support end where
+    depth costs no bending capacity; the beam-top notch is capped at
+    ``MAX_BEAM_NOTCH`` mm so the main ring beam keeps the most section it can. An
+    even split (rh/2) is used only when that is already within the cap. For the
+    sample (rafter 80, beam 120): DB = 35 into the beam (leaving 85), DR = 45.
     """
-    db = round(min(rh / 2.0, bh / 4.0))   # channel depth into the beam top
-    dr = round(rh) - db                    # channel depth into the rafter underside
+    db = min(round(rh / 2.0), MAX_BEAM_NOTCH)   # channel depth into the beam top
+    dr = round(rh) - db                          # channel depth into the rafter underside
     return db, dr
 
 
@@ -132,7 +137,7 @@ def _render_kaemmung(cfg: Config):
     pg = cfg.pergola
     bw, bh = pg.beams.width, pg.beams.height
     rw, rh = pg.rafters.width, pg.rafters.height
-    db, dr = _lap_split(rh, bh)
+    db, dr = _lap_split(rh)
     bear = bh - db             # bearing plane (notch floor), above the beam underside
 
     fig, axs = plt.subplots(1, 2, figsize=(12.0, 6.2), dpi=DPI)
@@ -376,7 +381,7 @@ def render_joinery(elements, cfg: Config) -> List[Tuple[str, str, "plt.Figure", 
     pg = cfg.pergola
     rh = pg.rafters.height
     bh = pg.beams.height
-    db, dr = _lap_split(rh, bh)
+    db, dr = _lap_split(rh)
     bear = bh - db
     tilt = pg.roof.tilt_deg
 
@@ -395,7 +400,7 @@ def render_joinery(elements, cfg: Config) -> List[Tuple[str, str, "plt.Figure", 
          f"ausgenommen, der Sparren fällt von oben ein, die Oberkanten fluchten (eine "
          f"Dachebene). Die Überlappung von {_fmt(rh)} mm wird <b>balkenschonend</b> geteilt: "
          f"nur {_fmt(db)} mm aus der Balkenoberkante (der {_fmt(bh)}-er Balken behält "
-         f"{_fmt(bh - db)} mm, ≈75 %) + {_fmt(dr)} mm aus der Sparren­unterkante. Der tiefere "
+         f"{_fmt(bh - db)} mm) + {_fmt(dr)} mm aus der Sparren­unterkante. Der tiefere "
          f"Schnitt sitzt im Sparren, und zwar genau an seinem <b>Auflager-Ende</b> (dort ist "
          f"das Biegemoment ~0, kostet also keine Tragfähigkeit). Auflagerfläche "
          f"<b>waagerecht</b> bei z = +{_fmt(bear)} mm schneiden — wegen der {_fmt(tilt)}°-"

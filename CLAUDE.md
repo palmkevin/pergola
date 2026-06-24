@@ -105,8 +105,8 @@ Verankerung" below; lifts the post `air_gap` clear of the concrete and adds an `
 roof: `build.py` builds a full perimeter beam ring on all four sides; the rafters cross *over* the
 front/house beams as a cross-lap (Kämmung) and end flush with their outer faces (no overhang),
 tops aligned, so the roof covering rests on a single plane. `joinery.py` derives the lap cut and
-biases it to protect the beam — the top notch is capped at ¼ of the beam depth (the deeper cut goes
-into the rafter, at its zero-moment support end));
+biases it to protect the beam — the beam-top notch is capped at `MAX_BEAM_NOTCH` mm (35; the deeper
+cut goes into the rafter, at its zero-moment support end));
 `roof.tilt_deg` (mono-pitch, sloping down toward the front, `clear_height` held on the house side);
 `roof.gutter` (rain gutter along the low front eave);
 `curtains` (optional fabric curtains hung on curtain rods strung between the corner posts — pick
