@@ -102,8 +102,11 @@ house sides — takes precedence over `house_offset`);
 `posts.anchor` (galvanised steel post base / U-Stützenfuß under every post — see "Pfosten-
 Verankerung" below; lifts the post `air_gap` clear of the concrete and adds an `anchor` element);
 `framing` (`stacked`, the default — rafters sit on top of the beams; or `flush` — a one-level
-roof: `build.py` builds a full perimeter beam ring on all four sides and houses the rafters
-flush *between* the front/back beams, tops aligned, so the roof covering rests on a single plane);
+roof: `build.py` builds a full perimeter beam ring on all four sides; the rafters cross *over* the
+front/house beams as a cross-lap (Kämmung) and end flush with their outer faces (no overhang),
+tops aligned, so the roof covering rests on a single plane. `joinery.py` derives the lap cut and
+biases it to protect the beam — the beam-top notch is capped at `MAX_BEAM_NOTCH` mm (35; the deeper
+cut goes into the rafter, at its zero-moment support end));
 `roof.tilt_deg` (mono-pitch, sloping down toward the front, `clear_height` held on the house side);
 `roof.gutter` (rain gutter along the low front eave);
 `curtains` (optional fabric curtains hung on curtain rods strung between the corner posts — pick

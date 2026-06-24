@@ -195,19 +195,20 @@ def build_pergola(pg: Pergola) -> List[Box]:
     # Beams sit on top of the posts.
     bm = pg.beams
     bh = bm.height
-    # The roof ends ABOVE the beams (no front/back overhang): the covering and the
-    # side beams span between the OUTER faces of the front and house-side beams,
-    # while the rafters are housed between their INNER faces. Both edges are derived
-    # from the post-row centres (ys), so moving a row moves its roof edge with it.
+    # The roof ends ABOVE the beams (no front/back overhang): the covering, the
+    # side beams AND the rafters all span between the OUTER faces of the front and
+    # house-side beams. In flush framing the rafters cross OVER those beams as a
+    # cross-lap (Kämmung, see joinery.py) and end flush with their outer faces — no
+    # overhang. Both edges derive from the post-row centres (ys), so moving a row
+    # moves its roof edge with it.
     roof_y0 = ys[0] - bm.width / 2     # front beam, outer (front) face
     roof_y1 = ys[-1] + bm.width / 2    # house-side beam, outer (house) face
-    raf_y0 = ys[0] + bm.width / 2      # front beam, inner face
-    raf_y1 = ys[-1] - bm.width / 2     # house-side beam, inner face
     if flush:
         # One-level frame: a full perimeter ring of beams. Front/back beams run
         # along x (horizontal, stepped to each row's underside); the left/right
         # beams run along y and follow the slope, so they are tilted slabs. The
-        # rafters (below) sit housed flush between the front and back beams.
+        # rafters (below) cross over the front/back beams flush (cross-lap), ending
+        # at their outer faces.
         for cy in (ys[0], ys[-1]):
             boxes.append(Box(
                 pos=(ox, cy - bm.width / 2, underside(cy)),
@@ -242,10 +243,11 @@ def build_pergola(pg: Pergola) -> List[Box]:
         panel_joints = [ox + i * panel_w for i in range(1, n_panels)]
 
     # Rafters laid across the beams; they span the roof (no overhang past the
-    # beams) and follow the roof slope. Stacked framing rests them ON TOP of the
-    # beams and runs them out to the roof edge (the beam outer faces); flush
-    # framing houses them BETWEEN the perimeter beams with tops aligned (rafter
-    # underside is then rh below the beam top), giving one roof plane.
+    # beams) and follow the roof slope. Both framings run the rafters out to the
+    # roof edge (the front/house beam OUTER faces). Stacked framing rests them ON
+    # TOP of the beams; flush framing drops them flush into the beam tops as a
+    # cross-lap (rafter underside is then rh below the beam top), giving one roof
+    # plane — the rafter crosses the beam and ends flush with its outer face.
     rf = pg.rafters
     rh = rf.height
     rb = (bh - rh) if flush else bh    # rafter underside, measured above the post top
@@ -264,7 +266,7 @@ def build_pergola(pg: Pergola) -> List[Box]:
                 hi = xs[-1] - bm.width / 2     # inner face of the right side beam
                 n = max(1, int(round((hi - lo) / rf.spacing)) - 1)   # interior rafters
                 centers = lo + (hi - lo) * np.arange(1, n + 1) / (n + 1)
-            ry0, ry1 = raf_y0, raf_y1      # housed between the front/back beams
+            ry0, ry1 = roof_y0, roof_y1    # cross over, flush, out to the outer faces
         else:
             n = _count_by_spacing(w - rf.width, rf.spacing)
             centers = _linspace_centers(ox + rf.width / 2, w - rf.width, n)
@@ -274,7 +276,7 @@ def build_pergola(pg: Pergola) -> List[Box]:
                                underside(ry0) + rb, underside(ry1) + rb,
                                rh, "rafter"))
     else:  # rafters along x -> horizontal, one per row, stepped in z
-        a, b = (raf_y0, raf_y1) if flush else (roof_y0, roof_y1)
+        a, b = roof_y0, roof_y1
         n = _count_by_spacing((b - a) - rf.width, rf.spacing)
         for cy in _linspace_centers(a + rf.width / 2, (b - a) - rf.width, n):
             boxes.append(Box(
