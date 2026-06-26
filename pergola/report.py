@@ -154,6 +154,48 @@ _HTML = Template(
        Pfad gehören zum Bestand und sind nicht aufgeführt.</p>
   </figure>
   {% endif %}
+  {% if materials and materials.fasteners and materials.fasteners.rows %}
+  <figure class="materials">
+    <table>
+      <caption>Verbindungsmittel / fasteners — Schrauben &amp; Bolzen</caption>
+      <thead>
+        <tr>
+          <th>Verbindung</th>
+          <th>Schraube / Bolzen</th>
+          <th class="num">Stellen</th>
+          <th class="num">je Stelle</th>
+          <th class="num">Anzahl</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for f in materials.fasteners.rows %}
+        <tr>
+          <td>{{ f.label }}</td>
+          <td>{{ f.spec }}</td>
+          <td class="num">{{ f.joints }}</td>
+          <td class="num">{{ f.per }}</td>
+          <td class="num">{{ f.qty }} Stück</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="4">Summe Schrauben / Bolzen</td>
+          <td class="num">{{ materials.fasteners.total }} Stück</td>
+        </tr>
+      </tfoot>
+    </table>
+    <p class="hint">Automatisch aus dem 3D-Modell abgeleitet (Anzahl der
+       Pfostenfüße, Eckverbindungen, Sparren-Kreuzungen und Kopfbänder ×
+       Schrauben je Stelle). Die Verbindungen sind reine Zimmermanns-
+       Überblattungen, daher nur Schrauben + je ein Bolzen pro Pfostenfuß,
+       <b>keine Blechwinkel</b>. Material A2 (Edelstahl) für die bewitterte
+       Konstruktion empfohlen; verzinkt-gelb ist die günstigere Alternative. Für
+       Überblattungen vorbohren. Ein kleiner <b>Vorrat</b> kürzerer Schrauben
+       (Ø6 × 80–100) für Profile/Rinnenhalter ist sinnvoll, aber nicht
+       mitgezählt (nicht aus dem Tragwerk ableitbar).</p>
+  </figure>
+  {% endif %}
   <figure class="glossary">
     <figcaption>Bauteil-Wortschatz / glossary of parts</figcaption>
     <dl>
