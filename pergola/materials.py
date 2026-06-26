@@ -18,6 +18,8 @@ from typing import List
 
 import numpy as np
 
+from .geometry import X, Y
+
 # category -> (German Bauteil name, material, metric kind).
 #   metric "length" -> running length in metres (Holz, Blech, Metall)
 #   metric "volume" -> concrete volume in m³ (Beton)
@@ -116,4 +118,79 @@ def summarize(elements) -> dict:
         "unit": unit,
     } for kind, (val, unit) in sorted(totals.items())]
 
-    return {"rows": rows, "totals": total_rows}
+    return {"rows": rows, "totals": total_rows, "fasteners": fasteners(elements)}
+
+
+# --------------------------------------------------------------------------- #
+#  Verbindungsmittel (Schrauben & Bolzen)
+# --------------------------------------------------------------------------- #
+# The Materialliste above lists the pieces (timber, panels, anchors …); it does
+# NOT list how they are FIXED together. The frame's joints are pure carpentry
+# joints (Eck-/Kreuzüberblattung) plus the post bases and knee braces, so the
+# only fixings needed are screws and one bolt per post base — no angle brackets.
+#
+# Each joint type below pairs a recommended fixing with the number of fixings it
+# needs; the joint COUNTS are derived from the box model (so the list scales
+# with the design). Corrosion class A2 (Edelstahl) is chosen for an exposed
+# outdoor pergola under a clear panel; verzinkt is the cheaper fallback.
+#   (Bauteil/Verbindung, Schraubentyp · Größe, fixings per joint)
+_FASTENERS = {
+    "anchor":   ("Pfosten → U-Stützenfuß",
+                 "Schlossschraube M10 × 90 (mit Mutter + Karosseriescheibe), Edelstahl A2", 2),
+    "corner":   ("Eck-Überblattung (Balken × Balken, über Pfosten)",
+                 "Konstruktionsschraube Ø8 × 200, Torx · Teilgewinde, Edelstahl A2", 2),
+    "kaemmung": ("Kämmung (Sparren × Balken)",
+                 "Konstruktionsschraube Ø6 × 120, Torx · Teilgewinde, Edelstahl A2", 2),
+    "brace":    ("Kopfband (Fuß + Kopf)",
+                 "Konstruktionsschraube Ø8 × 180, Torx · Teilgewinde, Edelstahl A2", 4),
+}
+# Display order of the fastener rows.
+_FASTENER_ORDER = ["anchor", "corner", "kaemmung", "brace"]
+
+
+def _classify_beams(elements) -> tuple:
+    """Count the perimeter-ring beams by run direction: ``(n_cross, n_side)``.
+
+    Cross beams run along x (the front/house Pfetten); side beams run along y
+    (the left/right Randbalken). The ring corners — where the carpentry
+    Eck-Überblattung sits over a post — number ``n_cross × n_side``."""
+    cross = side = 0
+    for b in elements:
+        if b.category != "beam":
+            continue
+        poly = np.array(b.poly_2d(X, Y))
+        if (poly[:, X].max() - poly[:, X].min()) >= (poly[:, Y].max() - poly[:, Y].min()):
+            cross += 1
+        else:
+            side += 1
+    return cross, side
+
+
+def fasteners(elements) -> dict:
+    """Screw/bolt shopping list derived from the box model.
+
+    Counts every structural joint the frame has — post bases (``anchor``), ring
+    corners (Eck-Überblattung), rafter×beam crossings (Kämmung) and knee braces
+    (``brace``) — and multiplies by the fixings each joint needs. Returns
+    ``{"rows": [...], "total": <Gesamtzahl Schrauben/Bolzen>}``; each row carries
+    the joint count, fixings-per-joint and the resulting quantity."""
+    n_cross, n_side = _classify_beams(elements)
+    n_rafter = sum(1 for e in elements if e.category == "rafter")
+    joints = {
+        "anchor":   sum(1 for e in elements if e.category == "anchor"),
+        "corner":   n_cross * n_side,        # two ring beams meet over each corner post
+        "kaemmung": n_rafter * n_cross,      # each rafter crosses each front/house beam
+        "brace":    sum(1 for e in elements if e.category == "brace"),
+    }
+    rows = []
+    total = 0
+    for key in _FASTENER_ORDER:
+        nj = joints.get(key, 0)
+        if nj <= 0:
+            continue
+        label, spec, per = _FASTENERS[key]
+        qty = nj * per
+        total += qty
+        rows.append({"label": label, "spec": spec,
+                     "joints": nj, "per": per, "qty": qty})
+    return {"rows": rows, "total": total}
