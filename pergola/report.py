@@ -189,11 +189,15 @@ _HTML = Template(
        Pfostenfüße, Eckverbindungen, Sparren-Kreuzungen und Kopfbänder ×
        Schrauben je Stelle). Die Verbindungen sind reine Zimmermanns-
        Überblattungen, daher nur Schrauben + Bolzen, <b>keine Blechwinkel</b>.
-       Jeder Pfostenfuß bekommt <b>einen Durchgangsbolzen</b> (mittleres,
-       fluchtendes Wangenloch) <b>plus vier Schlüsselschrauben</b> (je zwei in
-       die versetzten Wangenlöcher, nur ins Holz). Material durchgehend A2
-       (Edelstahl) — bewitterte Konstruktion, und am bodennahen Fuß würden
-       verzinkte Schrauben neben A2-Bolzen galvanisch wegrosten. Schlüssel- und
+       Jeder Pfostenfuß bekommt <b>einen Durchgangsbolzen</b> (Sechskantschraube
+       M10 × 90, DIN 931 mit Schaft; mittleres, fluchtendes Wangenloch) <b>plus
+       vier Schlüsselschrauben</b> (je zwei in die versetzten Wangenlöcher, nur
+       ins Holz). <b>Kleinteile (nicht im Schraubenpreis):</b> je Bolzen eine
+       M10-Mutter und zwei Scheiben (unter Kopf und Mutter), bei 4 Pfosten also
+       <b>4 Muttern + 8 Scheiben</b>, plus eine Scheibe je Schlüsselschraube
+       (16) — alles A2, separat dazukaufen. Material durchgehend A2 (Edelstahl)
+       — bewitterte Konstruktion, und am bodennahen Fuß würden verzinkte
+       Schrauben neben A2-Bolzen galvanisch wegrosten. Schlüssel- und
        Konstruktionsschrauben <b>vorbohren</b> (Ø10 bzw. nach Spezifikation).
        Ein kleiner <b>Vorrat</b> kürzerer Schrauben (Ø6 × 80–100) für
        Profile/Rinnenhalter ist sinnvoll, aber nicht mitgezählt (nicht aus dem
