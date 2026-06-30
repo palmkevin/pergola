@@ -127,22 +127,40 @@ def summarize(elements) -> dict:
 # The Materialliste above lists the pieces (timber, panels, anchors …); it does
 # NOT list how they are FIXED together. The frame's joints are pure carpentry
 # joints (Eck-/Kreuzüberblattung) plus the post bases and knee braces, so the
-# only fixings needed are screws and one bolt per post base — no angle brackets.
+# only fixings needed are screws/bolts — no angle brackets.
 #
-# Each joint type below pairs a recommended fixing with the number of fixings it
-# needs; the joint COUNTS are derived from the box model (so the list scales
-# with the design). Corrosion class A2 (Edelstahl) is chosen for an exposed
-# outdoor pergola under a clear panel; verzinkt is the cheaper fallback.
-#   (Bauteil/Verbindung, Schraubentyp · Größe, fixings per joint)
+# Each joint type below pairs the recommended fixing(s) with the number needed
+# per joint; the joint COUNTS are derived from the box model (so the list scales
+# with the design). A single joint may need MORE THAN ONE kind of fixing — the
+# post base, for instance, takes one through-bolt PLUS side screws — so the spec
+# is a LIST of (Schraubentyp · Größe, fixings per joint) pairs.
+#
+# Post base (anchor): the chosen U-Stützenfuß has three holes per wing, but only
+# the MIDDLE pair lines up across the U, so it takes ONE through-bolt there; the
+# remaining two holes per wing (4 per post) are fixed with hex-head coach screws
+# (Schlüsselschrauben) driven into the post — they don't pass through. The screw
+# length (60) stays under the post depth (71–80 mm milled) so it cannot exit the
+# far face; pre-drill (Ø10) to avoid splitting.
+#
+# Corrosion class A2 (Edelstahl) throughout — an exposed outdoor pergola under a
+# clear panel, and the post base sits in the damp ground zone; mixing verzinkt
+# screws with A2 bolts there would galvanically sacrifice the zinc. verzinkt is
+# only a cheaper fallback for a fully covered build.
+#   (Bauteil/Verbindung, [(Schraubentyp · Größe, fixings per joint), …])
 _FASTENERS = {
-    "anchor":   ("Pfosten → U-Stützenfuß",
-                 "Schlossschraube M10 × 90 (mit Mutter + Karosseriescheibe), Edelstahl A2", 2),
-    "corner":   ("Eck-Überblattung (Balken × Balken, über Pfosten)",
-                 "Konstruktionsschraube Ø8 × 200, Torx · Teilgewinde, Edelstahl A2", 2),
-    "kaemmung": ("Kämmung (Sparren × Balken)",
-                 "Konstruktionsschraube Ø6 × 120, Torx · Teilgewinde, Edelstahl A2", 2),
-    "brace":    ("Kopfband (Fuß + Kopf)",
-                 "Konstruktionsschraube Ø8 × 180, Torx · Teilgewinde, Edelstahl A2", 4),
+    "anchor":   ("Pfosten → U-Stützenfuß", [
+        ("Schlossschraube M10 × 90 (Durchgang, mittleres Loch; mit Mutter + Karosseriescheibe), Edelstahl A2", 1),
+        ("Schlüsselschraube/Sechskant-Holzschraube Ø10 × 60 (in den Pfosten, 2 je Wange), Edelstahl A2", 4),
+    ]),
+    "corner":   ("Eck-Überblattung (Balken × Balken, über Pfosten)", [
+        ("Konstruktionsschraube Ø8 × 200, Torx · Teilgewinde, Edelstahl A2", 2),
+    ]),
+    "kaemmung": ("Kämmung (Sparren × Balken)", [
+        ("Konstruktionsschraube Ø6 × 120, Torx · Teilgewinde, Edelstahl A2", 2),
+    ]),
+    "brace":    ("Kopfband (Fuß + Kopf)", [
+        ("Konstruktionsschraube Ø8 × 180, Torx · Teilgewinde, Edelstahl A2", 4),
+    ]),
 }
 # Display order of the fastener rows.
 _FASTENER_ORDER = ["anchor", "corner", "kaemmung", "brace"]
@@ -188,9 +206,10 @@ def fasteners(elements) -> dict:
         nj = joints.get(key, 0)
         if nj <= 0:
             continue
-        label, spec, per = _FASTENERS[key]
-        qty = nj * per
-        total += qty
-        rows.append({"label": label, "spec": spec,
-                     "joints": nj, "per": per, "qty": qty})
+        label, specs = _FASTENERS[key]
+        for spec, per in specs:
+            qty = nj * per
+            total += qty
+            rows.append({"label": label, "spec": spec,
+                         "joints": nj, "per": per, "qty": qty})
     return {"rows": rows, "total": total}
