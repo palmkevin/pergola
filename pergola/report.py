@@ -188,12 +188,16 @@ _HTML = Template(
     <p class="hint">Automatisch aus dem 3D-Modell abgeleitet (Anzahl der
        Pfostenfüße, Eckverbindungen, Sparren-Kreuzungen und Kopfbänder ×
        Schrauben je Stelle). Die Verbindungen sind reine Zimmermanns-
-       Überblattungen, daher nur Schrauben + je ein Bolzen pro Pfostenfuß,
-       <b>keine Blechwinkel</b>. Material A2 (Edelstahl) für die bewitterte
-       Konstruktion empfohlen; verzinkt-gelb ist die günstigere Alternative. Für
-       Überblattungen vorbohren. Ein kleiner <b>Vorrat</b> kürzerer Schrauben
-       (Ø6 × 80–100) für Profile/Rinnenhalter ist sinnvoll, aber nicht
-       mitgezählt (nicht aus dem Tragwerk ableitbar).</p>
+       Überblattungen, daher nur Schrauben + Bolzen, <b>keine Blechwinkel</b>.
+       Jeder Pfostenfuß bekommt <b>einen Durchgangsbolzen</b> (mittleres,
+       fluchtendes Wangenloch) <b>plus vier Schlüsselschrauben</b> (je zwei in
+       die versetzten Wangenlöcher, nur ins Holz). Material durchgehend A2
+       (Edelstahl) — bewitterte Konstruktion, und am bodennahen Fuß würden
+       verzinkte Schrauben neben A2-Bolzen galvanisch wegrosten. Schlüssel- und
+       Konstruktionsschrauben <b>vorbohren</b> (Ø10 bzw. nach Spezifikation).
+       Ein kleiner <b>Vorrat</b> kürzerer Schrauben (Ø6 × 80–100) für
+       Profile/Rinnenhalter ist sinnvoll, aber nicht mitgezählt (nicht aus dem
+       Tragwerk ableitbar).</p>
   </figure>
   {% endif %}
   <figure class="glossary">
