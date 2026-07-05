@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import hashlib
 import os
+import shutil
 from datetime import datetime
 from typing import List, Tuple
 from zoneinfo import ZoneInfo
@@ -63,6 +64,13 @@ _HTML = Template(
   .materials tfoot td { font-weight: 600; border-top: 2px solid #e2ddd2; }
   .materials .hint { padding: 10px 16px 14px; color: #666; font-size: 13px;
                      max-width: 70em; }
+  .materials .detaillink { padding: 12px 16px; margin: 0; font-size: 14px;
+                           border-bottom: 1px solid #f0ece2;
+                           background: #fbf7ee; }
+  .materials .detaillink a { color: #b3541f; font-weight: 600;
+                             text-decoration: none; }
+  .materials .detaillink a:hover, .materials .detaillink a:focus {
+                             text-decoration: underline; }
   figcaption .note { display: block; font-weight: 400; color: #555; font-size: 13px;
                      margin-top: 4px; max-width: 70em; }
   footer { padding: 16px 32px 40px; color: #999; font-size: 12px; }
@@ -185,15 +193,24 @@ _HTML = Template(
         </tr>
       </tfoot>
     </table>
+    {% if detail_page %}
+    <p class="detaillink">→ <a href="{{ detail_page }}">Detailzeichnung: wie Pfosten,
+       Rahmen &amp; Sparren verschraubt werden</a> — Schnitte + Draufsichten,
+       Kopfform (Senk-/Tellerkopf) und Menge je Verbindung.</p>
+    {% endif %}
     <p class="hint">Automatisch aus dem 3D-Modell abgeleitet (Anzahl der
        Pfostenfüße, Eckverbindungen, Sparren-Kreuzungen und Kopfbänder ×
        Schrauben je Stelle). Die Verbindungen sind reine Zimmermanns-
        Überblattungen, daher nur Schrauben + Bolzen, <b>keine Blechwinkel</b>.
-       Jeder Pfostenfuß bekommt <b>einen Durchgangsbolzen</b> (mittleres,
-       fluchtendes Wangenloch) <b>plus vier Schlüsselschrauben</b> (je zwei in
-       die versetzten Wangenlöcher, nur ins Holz). Material durchgehend A2
-       (Edelstahl) — bewitterte Konstruktion, und am bodennahen Fuß würden
-       verzinkte Schrauben neben A2-Bolzen galvanisch wegrosten. Schlüssel- und
+       Jeder Pfostenfuß bekommt <b>einen Durchgangsbolzen</b> (Sechskantschraube
+       M10 × 90, DIN 931 mit Schaft; mittleres, fluchtendes Wangenloch) <b>plus
+       vier Schlüsselschrauben</b> (je zwei in die versetzten Wangenlöcher, nur
+       ins Holz). <b>Kleinteile (nicht im Schraubenpreis):</b> je Bolzen eine
+       M10-Mutter und zwei Scheiben (unter Kopf und Mutter), bei 4 Pfosten also
+       <b>4 Muttern + 8 Scheiben</b>, plus eine Scheibe je Schlüsselschraube
+       (16) — alles A2, separat dazukaufen. Material durchgehend A2 (Edelstahl)
+       — bewitterte Konstruktion, und am bodennahen Fuß würden verzinkte
+       Schrauben neben A2-Bolzen galvanisch wegrosten. Schlüssel- und
        Konstruktionsschrauben <b>vorbohren</b> (Ø10 bzw. nach Spezifikation).
        Ein kleiner <b>Vorrat</b> kürzerer Schrauben (Ø6 × 80–100) für
        Profile/Rinnenhalter ist sinnvoll, aber nicht mitgezählt (nicht aus dem
@@ -316,13 +333,24 @@ def write_outputs(views: List[Tuple[str, str, "Figure"]], outdir: str,
     downloads = [(_dl_labels[k], _versioned(model_paths[k]))
                  for k in ("step", "stl", "glb") if model_paths.get(k)]
 
+    # Supplementary screw-detail sheet (static asset): a hand-drawn page showing
+    # HOW the timber joints are screwed (sections + plans, head form + count per
+    # joint) — the model-derived table above lists the fasteners, this page shows
+    # the fitting. Copied into the output next to index.html and linked from the
+    # fasteners section (relative URL, so it also works on the public Pages site).
+    detail_page = None
+    _asset = os.path.join(os.path.dirname(__file__), "assets", "verschraubung.html")
+    if os.path.exists(_asset):
+        shutil.copyfile(_asset, os.path.join(outdir, "verschraubung.html"))
+        detail_page = _versioned(os.path.join(outdir, "verschraubung.html"))
+
     html_path = os.path.join(outdir, "index.html")
     with open(html_path, "w", encoding="utf-8") as fh:
         fh.write(_HTML.render(views=png_entries, details=detail_entries,
                               config_name=config_name,
                               units=units, pdf_name=_versioned(pdf_path),
                               model_glb=glb_name, downloads=downloads,
-                              materials=materials,
+                              materials=materials, detail_page=detail_page,
                               build_time=datetime.now(_CET).strftime(
                                   "%Y-%m-%d %H:%M:%S %Z")))
 

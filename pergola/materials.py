@@ -142,6 +142,16 @@ def summarize(elements) -> dict:
 # length (60) stays under the post depth (71–80 mm milled) so it cannot exit the
 # far face; pre-drill (Ø10) to avoid splitting.
 #
+# The through-bolt is a hex-head bolt (Sechskantschraube DIN 931, mit Schaft) —
+# preferred over a carriage bolt (Schlossschraube DIN 603) here because the U's
+# bolt hole is round, so a carriage bolt's square neck cannot lock and the head
+# spins when torquing; a hex head can be counter-held with a spanner. Both bear
+# on STEEL (a wing each side), so it needs a washer under BOTH the head and the
+# nut (A2, anti-galling + hole cover) — noted inline in the spec; per-bolt that
+# is 1 nut + 2 washers (4 nuts + 8 washers over the 4 posts). DIN 603 is an
+# equivalent fallback. Nuts/washers are usually NOT in the bolt listing — buy A2
+# separately.
+#
 # Corrosion class A2 (Edelstahl) throughout — an exposed outdoor pergola under a
 # clear panel, and the post base sits in the damp ground zone; mixing verzinkt
 # screws with A2 bolts there would galvanically sacrifice the zinc. verzinkt is
@@ -149,8 +159,8 @@ def summarize(elements) -> dict:
 #   (Bauteil/Verbindung, [(Schraubentyp · Größe, fixings per joint), …])
 _FASTENERS = {
     "anchor":   ("Pfosten → U-Stützenfuß", [
-        ("Schlossschraube M10 × 90 (Durchgang, mittleres Loch; mit Mutter + Karosseriescheibe), Edelstahl A2", 1),
-        ("Schlüsselschraube/Sechskant-Holzschraube Ø10 × 60 (in den Pfosten, 2 je Wange), Edelstahl A2", 4),
+        ("Sechskantschraube M10 × 90, DIN 931 mit Schaft (Durchgang, mittleres Loch; M10-Mutter + 2 Scheiben unter Kopf & Mutter), Edelstahl A2", 1),
+        ("Schlüsselschraube/Sechskant-Holzschraube Ø10 × 60 (in den Pfosten, 2 je Wange; mit Scheibe), Edelstahl A2", 4),
     ]),
     "corner":   ("Eck-Überblattung (Balken × Balken, über Pfosten)", [
         ("Konstruktionsschraube Ø8 × 200, Torx · Teilgewinde, Edelstahl A2", 2),
