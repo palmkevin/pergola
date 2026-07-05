@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pergola &#8211; Verschraubung: Pfosten, Rahmen & Sparren</title>
+<style>
+  :root {
+    --paper: #fbfbf8;        /* drawing sheet */
+    --page:  #e9ecef;        /* page ground   */
+    --ink:   #23292e;
+    --muted: #5f6a73;
+    --line:  #b9c2ca;        /* dimension / faint lines */
+    --wood:  #c69c6d;        /* beams */
+    --wood2: #dcbd8f;        /* rafters */
+    --post:  #b0824a;        /* posts */
+    --screw: #cf4520;        /* the one accent &#8212; fasteners */
+    --sans:  ui-sans-serif, system-ui, "Helvetica Neue", Arial, sans-serif;
+    --mono:  ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+    --maxw: 1080px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #1b2024;
+      --page:  #101315;
+      --ink:   #e7ecee;
+      --muted: #97a2aa;
+      --line:  #39444c;
+      --wood:  #8f6c41;
+      --wood2: #a98553;
+      --post:  #6f5330;
+      --screw: #f2653d;
+    }
+  }
+  :root[data-theme="light"] {
+    --paper: #fbfbf8; --page: #e9ecef; --ink: #23292e; --muted: #5f6a73;
+    --line: #b9c2ca; --wood: #c69c6d; --wood2: #dcbd8f; --post: #b0824a; --screw: #cf4520;
+  }
+  :root[data-theme="dark"] {
+    --paper: #1b2024; --page: #101315; --ink: #e7ecee; --muted: #97a2aa;
+    --line: #39444c; --wood: #8f6c41; --wood2: #a98553; --post: #6f5330; --screw: #f2653d;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--page); color: var(--ink);
+    font-family: var(--sans); line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: var(--maxw); margin: 0 auto; padding: 40px 24px 72px; }
+
+  /* ---- title block ---- */
+  header.sheet {
+    border: 1.5px solid var(--ink); background: var(--paper);
+    border-radius: 4px; padding: 22px 26px; margin-bottom: 24px;
+    display: grid; gap: 6px;
+  }
+  .eyebrow {
+    font: 600 12px var(--mono); letter-spacing: .18em; text-transform: uppercase;
+    color: var(--screw);
+  }
+  h1 {
+    font-size: clamp(1.5rem, 3.4vw, 2.2rem); line-height: 1.1; margin: 2px 0 4px;
+    text-wrap: balance; font-weight: 700; letter-spacing: -0.01em;
+  }
+  header.sheet p { margin: 0; color: var(--muted); max-width: 62ch; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 8px 22px; margin-top: 12px;
+    padding-top: 12px; border-top: 1px solid var(--line);
+    font: 12px var(--mono); color: var(--muted);
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+
+  /* ---- shared legend ---- */
+  .key { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 0 2px 26px;
+         font: 12px var(--mono); color: var(--muted); }
+  .key span { display: inline-flex; align-items: center; gap: 7px; }
+  .sw { width: 16px; height: 12px; border: 1px solid var(--ink); border-radius: 2px; }
+
+  /* ---- detail cards ---- */
+  .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+  @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
+  .card {
+    background: var(--paper); border: 1.5px solid var(--ink); border-radius: 4px;
+    overflow: hidden; display: flex; flex-direction: column;
+  }
+  .card.full { grid-column: 1 / -1; }
+  .card h2 {
+    margin: 0; padding: 14px 18px 10px; font-size: 1.02rem; font-weight: 700;
+    display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+  }
+  .card h2 .tag {
+    font: 600 11px var(--mono); letter-spacing: .04em; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px; padding: 2px 9px;
+  }
+  .card .fig { padding: 4px 12px 6px; overflow-x: auto; }
+  .card svg { display: block; width: 100%; height: auto; }
+  .spec {
+    margin: 0; padding: 12px 18px 16px; border-top: 1px solid var(--line);
+    display: grid; gap: 6px; font-size: .9rem;
+  }
+  .spec .screwline { font: 600 .92rem var(--mono); color: var(--screw); letter-spacing: -0.01em; }
+  .spec .note { color: var(--muted); font-size: .85rem; }
+
+  /* svg element classes */
+  .beam   { fill: var(--wood); }
+  .beam2  { fill: var(--wood); opacity: .82; }
+  .rafter { fill: var(--wood2); }
+  .post   { fill: var(--post); }
+  .edge   { fill: none; stroke: var(--ink); stroke-width: 1.4; }
+  .edge-t { fill: none; stroke: var(--ink); stroke-width: 1.4; stroke-dasharray: 5 4; }
+  .plane  { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 2 3; }
+  .dim    { stroke: var(--muted); stroke-width: .9; }
+  .scr    { stroke: var(--screw); stroke-width: 2.4; fill: none; stroke-linecap: round; }
+  .scrhead{ fill: var(--screw); }
+  .lbl    { fill: var(--ink); font: 600 12px var(--sans); }
+  .sub    { fill: var(--muted); font: 11px var(--sans); }
+  .dimtxt { fill: var(--muted); font: 11px var(--mono); }
+  .cot    { fill: var(--screw); font: 600 11px var(--mono); }
+
+  /* ---- summary table ---- */
+  section.sum { margin-top: 30px; }
+  section.sum h2 {
+    font-size: 1.1rem; margin: 0 2px 12px; font-weight: 700;
+    display: flex; align-items: center; gap: 10px;
+  }
+  section.sum h2::before {
+    content: ""; width: 14px; height: 14px; border-radius: 3px;
+    background: var(--screw); display: inline-block;
+  }
+  .tblwrap { overflow-x: auto; border: 1.5px solid var(--ink); border-radius: 4px; background: var(--paper); }
+  table { border-collapse: collapse; width: 100%; min-width: 560px; font-size: .9rem; }
+  caption { text-align: left; padding: 12px 16px 0; color: var(--muted); font: 12px var(--mono); }
+  th, td { text-align: left; padding: 11px 16px; border-bottom: 1px solid var(--line); }
+  thead th { font: 600 11px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  tbody tr:last-child td { border-bottom: none; }
+  td.num, th.num { text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; }
+  .scell { font: 600 .86rem var(--mono); color: var(--screw); }
+  tfoot td { font-weight: 700; background: color-mix(in srgb, var(--screw) 8%, transparent); }
+
+  .notes { margin: 26px 2px 0; padding: 16px 20px; border: 1px solid var(--line);
+           border-left: 3px solid var(--screw); border-radius: 4px; background: var(--paper); }
+  .notes h3 { margin: 0 0 8px; font-size: .95rem; }
+  .notes ul { margin: 0; padding-left: 18px; display: grid; gap: 5px; color: var(--muted); font-size: .89rem; }
+  .notes b { color: var(--ink); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="sheet">
+    <span class="eyebrow">Pergola &#183; Montagedetail</span>
+    <h1>Verschraubung: Pfosten, Rahmen &amp; Sparren</h1>
+    <p>Welche Schraube an welche Verbindung, wie viele und wie tief. Jede Verbindung als
+       Schnitt (Schraubentiefe) und Draufsicht (Lage). Rot = Schraube.</p>
+    <div class="meta">
+      <span><b>Ma&#223;stab</b> schematisch, Ma&#223;e in mm</span>
+      <span><b>Material</b> alle Schrauben Edelstahl A2</span>
+      <span><b>Immer</b> vorbohren &#183; Senkk&#246;pfe b&#252;ndig</span>
+      <span><b>Pfostenf&#252;&#223;e</b> hier weggelassen</span>
+    </div>
+  </header>
+
+  <div class="key">
+    <span><span class="sw" style="background:var(--wood)"></span>Rahmenbalken 80&#215;120</span>
+    <span><span class="sw" style="background:var(--rafter,var(--wood2));background:var(--wood2)"></span>Sparren 60&#215;80</span>
+    <span><span class="sw" style="background:var(--post)"></span>Pfosten 60&#215;80</span>
+    <span><span class="sw" style="background:var(--screw);border-color:var(--screw)"></span>Schraube</span>
+  </div>
+
+  <div class="grid">
+
+    <!-- ============ CARD 1: Eck-&#220;berblattung ============ -->
+    <div class="card">
+      <h2>Ecke: Pfosten &#8596; Rahmen <span class="tag">Eck-&#220;berblattung</span></h2>
+      <div class="fig">
+        <svg viewBox="0 0 500 300" role="img" aria-label="Schnitt und Draufsicht der Eck-&#220;berblattung mit zwei Senkkopfschrauben von oben durch den Sto&#223; in den Pfosten">
+          <!-- ---------- SECTION (left) ---------- -->
+          <text class="sub" x="14" y="26">Schnitt</text>
+          <!-- roof plane / top -->
+          <line class="plane" x1="14" y1="52" x2="210" y2="52"/>
+          <text class="sub" x="14" y="46">Oberkante (Dachebene)</text>
+
+          <!-- lower beam A (runs left-right, in profile), lower half 60mm -->
+          <rect class="beam" x="20" y="112" width="180" height="30"/>
+          <rect class="edge" x="20" y="112" width="180" height="30"/>
+          <!-- upper beam B (crosses, cross-section 80mm wide), upper half 60mm -->
+          <rect class="beam2" x="78" y="82" width="52" height="30"/>
+          <rect class="edge" x="78" y="82" width="52" height="30"/>
+          <!-- post below (60x80), stub -->
+          <rect class="post" x="80" y="142" width="48" height="52"/>
+          <rect class="edge" x="80" y="142" width="48" height="52"/>
+
+          <!-- flush top line at y=82 -->
+          <line class="edge" x1="78" y1="82" x2="130" y2="82"/>
+
+          <!-- screws: two, from top (y=82) down 140mm=70px -> y=152 (20mm into post) -->
+          <!-- screw 1 -->
+          <g>
+            <polygon class="scrhead" points="90,82 100,82 95,89"/>
+            <line class="scr" x1="95" y1="86" x2="95" y2="150"/>
+            <line class="scr" x1="91" y1="140" x2="99" y2="140" stroke-width="1.4"/>
+            <line class="scr" x1="91" y1="145" x2="99" y2="145" stroke-width="1.4"/>
+            <polygon class="scrhead" points="95,156 91,148 99,148"/>
+          </g>
+          <!-- screw 2 -->
+          <g>
+            <polygon class="scrhead" points="108,82 118,82 113,89"/>
+            <line class="scr" x1="113" y1="86" x2="113" y2="150"/>
+            <line class="scr" x1="109" y1="140" x2="117" y2="140" stroke-width="1.4"/>
+            <line class="scr" x1="109" y1="145" x2="117" y2="145" stroke-width="1.4"/>
+            <polygon class="scrhead" points="113,156 109,148 117,148"/>
+          </g>
+
+          <!-- dimensions on the right of section -->
+          <line class="dim" x1="210" y1="82" x2="210" y2="112"/>
+          <line class="dim" x1="206" y1="82" x2="214" y2="82"/>
+          <line class="dim" x1="206" y1="112" x2="214" y2="112"/>
+          <text class="dimtxt" x="216" y="100">60</text>
+          <line class="dim" x1="210" y1="112" x2="210" y2="142"/>
+          <line class="dim" x1="206" y1="142" x2="214" y2="142"/>
+          <text class="dimtxt" x="216" y="130">60</text>
+          <line class="dim" x1="210" y1="142" x2="210" y2="152"/>
+          <line class="dim" x1="206" y1="152" x2="214" y2="152"/>
+          <text class="dimtxt" x="216" y="152">20</text>
+
+          <!-- member labels -->
+          <text class="sub" x="132" y="100">Balken quer</text>
+          <text class="sub" x="132" y="110">(obere H&#228;lfte)</text>
+          <text class="sub" x="24" y="131">Balken (untere H&#228;lfte)</text>
+          <text class="sub" x="54" y="182">Pfosten</text>
+
+          <!-- callout -->
+          <text class="cot" x="20" y="212">2&#215; von oben durch den Sto&#223;</text>
+          <text class="cot" x="20" y="226">&#8594; 120 mm Sto&#223; + 20 mm Pfosten</text>
+
+          <!-- ---------- PLAN (right) ---------- -->
+          <text class="sub" x="300" y="26">Draufsicht</text>
+          <!-- post hidden below (dashed) -->
+          <rect class="edge-t" x="352" y="96" width="48" height="64"/>
+          <!-- beam A band horizontal -->
+          <rect class="beam" x="300" y="112" width="180" height="32" opacity="0.6"/>
+          <rect class="edge" x="300" y="112" width="180" height="32"/>
+          <!-- beam B band vertical -->
+          <rect class="beam2" x="360" y="70" width="32" height="180" opacity="0.6"/>
+          <rect class="edge" x="360" y="70" width="32" height="180"/>
+          <!-- overlap square outline -->
+          <rect class="edge" x="360" y="112" width="32" height="32" fill="none"/>
+          <!-- 2 screw symbols in overlap -->
+          <g>
+            <circle cx="369" cy="121" r="4.5" class="scr" stroke-width="1.6"/>
+            <line class="scr" x1="365.5" y1="121" x2="372.5" y2="121" stroke-width="1.4"/>
+            <line class="scr" x1="369" y1="117.5" x2="369" y2="124.5" stroke-width="1.4"/>
+          </g>
+          <g>
+            <circle cx="383" cy="135" r="4.5" class="scr" stroke-width="1.6"/>
+            <line class="scr" x1="379.5" y1="135" x2="386.5" y2="135" stroke-width="1.4"/>
+            <line class="scr" x1="383" y1="131.5" x2="383" y2="138.5" stroke-width="1.4"/>
+          </g>
+          <text class="sub" x="300" y="270">Beide Schrauben in die</text>
+          <text class="sub" x="300" y="282">&#220;berblattung, &#252;ber dem Pfosten</text>
+        </svg>
+      </div>
+      <div class="spec">
+        <span class="screwline">2&#215; Senkkopf &#216;8 &#215; 140 mm &#183; A2 &#183; Teilgewinde</span>
+        <span class="note">Von oben senkrecht durch beide Balkenh&#228;lften (2&#215;60) bis in den Pfosten.
+          Vorbohren &#216;8, Kopf b&#252;ndig versenken (liegt in der Dachebene).</span>
+        <span class="note">4 Ecken &#215; 2 = <b>8 St&#252;ck</b></span>
+      </div>
+    </div>
+
+    <!-- ============ CARD 2: K&#228;mmung ============ -->
+    <div class="card">
+      <h2>Dach: Sparren &#8596; Balken <span class="tag">K&#228;mmung</span></h2>
+      <div class="fig">
+        <svg viewBox="0 0 500 300" role="img" aria-label="Schnitt und Draufsicht der K&#228;mmung mit zwei Senkkopfschrauben von oben durch den Sparren in den Balken">
+          <!-- ---------- SECTION (left) ---------- -->
+          <text class="sub" x="14" y="26">Schnitt</text>
+          <line class="plane" x1="14" y1="52" x2="210" y2="52"/>
+          <text class="sub" x="14" y="46">Oberkante (Dachebene)</text>
+
+          <!-- beam cross-section: full rect, rafter seats in the 35 mm notch on top -->
+          <rect class="beam" x="60" y="87" width="100" height="85"/>
+          <rect class="edge" x="60" y="87" width="100" height="85"/>
+          <!-- rafter sitting in 35mm-deep notch, top flush at y=70; rafter width 60mm=30px -->
+          <rect class="rafter" x="95" y="70" width="30" height="34"/>
+          <rect class="edge" x="95" y="70" width="30" height="34"/>
+          <!-- rafter continuing left & right (hangs below roof plane, notched underside) -->
+          <rect class="rafter" x="18" y="70" width="42" height="40" opacity="0.85"/>
+          <rect class="edge" x="18" y="70" width="42" height="40"/>
+          <rect class="rafter" x="160" y="70" width="42" height="40" opacity="0.85"/>
+          <rect class="edge" x="160" y="70" width="42" height="40"/>
+          <!-- flush top -->
+          <line class="edge" x1="18" y1="70" x2="202" y2="70"/>
+
+          <!-- screws: from top y=70 down 120mm=60px -> y=130 (reaches beam bottom ~172? scale) -->
+          <!-- (beam bottom drawn at 172; 120mm=60px lands mid-beam visually &#8212; annotate reaches underside) -->
+          <g>
+            <polygon class="scrhead" points="103,70 113,70 108,77"/>
+            <line class="scr" x1="108" y1="74" x2="108" y2="164"/>
+            <line class="scr" x1="104" y1="152" x2="112" y2="152" stroke-width="1.4"/>
+            <line class="scr" x1="104" y1="157" x2="112" y2="157" stroke-width="1.4"/>
+            <polygon class="scrhead" points="108,170 104,162 112,162"/>
+          </g>
+          <g>
+            <polygon class="scrhead" points="115,70 125,70 120,77"/>
+            <line class="scr" x1="120" y1="74" x2="120" y2="164"/>
+            <line class="scr" x1="116" y1="152" x2="124" y2="152" stroke-width="1.4"/>
+            <line class="scr" x1="116" y1="157" x2="124" y2="157" stroke-width="1.4"/>
+            <polygon class="scrhead" points="120,170 116,162 124,162"/>
+          </g>
+
+          <!-- dimension: 120 total, along screw -->
+          <line class="dim" x1="210" y1="70" x2="210" y2="172"/>
+          <line class="dim" x1="206" y1="70" x2="214" y2="70"/>
+          <line class="dim" x1="206" y1="172" x2="214" y2="172"/>
+          <text class="dimtxt" x="216" y="124">120</text>
+
+          <!-- labels -->
+          <text class="sub" x="132" y="96">Sparren</text>
+          <text class="sub" x="64" y="150">Balken</text>
+          <text class="cot" x="20" y="200">Schraube reicht bis zur</text>
+          <text class="cot" x="20" y="214">Balken-Unterkante (120)</text>
+          <text class="sub" x="20" y="232">Balken oben 35 tief ausgeklinkt,</text>
+          <text class="sub" x="20" y="244">Sparren-Unterseite 45 &#8211; Oberkanten b&#252;ndig</text>
+
+          <!-- ---------- PLAN (right) ---------- -->
+          <text class="sub" x="300" y="26">Draufsicht</text>
+          <!-- beam band horizontal (80 wide = 40px) -->
+          <rect class="beam" x="300" y="120" width="180" height="40" opacity="0.6"/>
+          <rect class="edge" x="300" y="120" width="180" height="40"/>
+          <!-- rafter band vertical (60 wide = 30px) crossing over -->
+          <rect class="rafter" x="362" y="66" width="30" height="188" opacity="0.7"/>
+          <rect class="edge" x="362" y="66" width="30" height="188"/>
+          <!-- overlap -->
+          <rect class="edge" x="362" y="120" width="30" height="40" fill="none"/>
+          <!-- 2 screws along the rafter -->
+          <g>
+            <circle cx="377" cy="130" r="4.5" class="scr" stroke-width="1.6"/>
+            <line class="scr" x1="373.5" y1="130" x2="380.5" y2="130" stroke-width="1.4"/>
+            <line class="scr" x1="377" y1="126.5" x2="377" y2="133.5" stroke-width="1.4"/>
+          </g>
+          <g>
+            <circle cx="377" cy="150" r="4.5" class="scr" stroke-width="1.6"/>
+            <line class="scr" x1="373.5" y1="150" x2="380.5" y2="150" stroke-width="1.4"/>
+            <line class="scr" x1="377" y1="146.5" x2="377" y2="153.5" stroke-width="1.4"/>
+          </g>
+          <text class="sub" x="300" y="274">2 Schrauben in Sparren-Achse</text>
+        </svg>
+      </div>
+      <div class="spec">
+        <span class="screwline">2&#215; Senkkopf &#216;6 &#215; 120 mm &#183; A2 &#183; Teilgewinde</span>
+        <span class="note">Von oben durch den Sparren in den Balken (erreicht die Balken-Unterkante,
+          tritt nicht aus). Vorbohren &#216;6, Kopf b&#252;ndig (Dachebene).</span>
+        <span class="note">4 Kreuzungen &#215; 2 = <b>8 St&#252;ck</b></span>
+      </div>
+    </div>
+
+    <!-- ============ CARD 3: Kopfband ============ -->
+    <div class="card full">
+      <h2>Aussteifung: Pfosten &#8596; Rahmen <span class="tag">Kopfband / Strebe</span></h2>
+      <div class="fig">
+        <svg viewBox="0 0 900 260" role="img" aria-label="Ansicht eines Kopfbands zwischen Pfosten und Balken, an jedem Ende zwei Tellerkopfschrauben durch die Strebe">
+          <!-- beam along top -->
+          <rect class="beam" x="120" y="40" width="520" height="46"/>
+          <rect class="edge" x="120" y="40" width="520" height="46"/>
+          <text class="sub" x="470" y="30">Rahmenbalken 80&#215;120</text>
+          <!-- post on left -->
+          <rect class="post" x="120" y="86" width="40" height="150"/>
+          <rect class="edge" x="120" y="86" width="40" height="150"/>
+          <text class="sub" x="96" y="230" transform="rotate(-90 96,230)">Pfosten 60&#215;80</text>
+          <!-- brace 60x60 at 45 deg between post face (x=160) and beam underside (y=86) -->
+          <!-- brace as a thick diagonal band -->
+          <polygon class="rafter" points="160,150 160,192 262,86 220,86"/>
+          <polygon class="edge" points="160,150 160,192 262,86 220,86"/>
+          <text class="lbl" x="250" y="150">Kopfband 60&#215;60</text>
+          <text class="sub" x="250" y="166">45&#176; &#183; L&#228;nge 400</text>
+
+          <!-- screws at foot (into post): 2 through brace along axis -->
+          <g>
+            <line class="scr" x1="150" y1="171" x2="182" y2="171"/>
+            <polygon class="scrhead" points="146,167 146,175 152,171"/>
+            <rect class="scrhead" x="180" y="168" width="5" height="6"/>
+          </g>
+          <g>
+            <line class="scr" x1="150" y1="181" x2="182" y2="181"/>
+            <polygon class="scrhead" points="146,177 146,185 152,181"/>
+            <rect class="scrhead" x="180" y="178" width="5" height="6"/>
+          </g>
+          <text class="cot" x="150" y="205">2&#215; in den Pfosten</text>
+
+          <!-- screws at head (into beam): 2 through brace into beam -->
+          <g>
+            <line class="scr" x1="228" y1="92" x2="228" y2="120"/>
+            <polygon class="scrhead" points="224,124 232,124 228,118"/>
+            <rect class="scrhead" x="225" y="90" width="6" height="5"/>
+          </g>
+          <g>
+            <line class="scr" x1="244" y1="92" x2="244" y2="120"/>
+            <polygon class="scrhead" points="240,124 248,124 244,118"/>
+            <rect class="scrhead" x="241" y="90" width="6" height="5"/>
+          </g>
+          <text class="cot" x="256" y="112">2&#215; in den Balken</text>
+
+          <!-- note about Tellerkopf -->
+          <text class="sub" x="470" y="150">Tellerkopf liegt auf der Strebe auf &#8211;</text>
+          <text class="sub" x="470" y="166">nicht versenken (kein Senkkopf).</text>
+          <text class="sub" x="470" y="182">Nur die Eck-Pfosten, je Richtung eine Strebe.</text>
+        </svg>
+      </div>
+      <div class="spec">
+        <span class="screwline">4&#215; Tellerkopf &#216;8 &#215; 140 mm &#183; A2 &#183; Teilgewinde &nbsp;(je Ende 2)</span>
+        <span class="note">Durch die Strebe in Pfosten und Balken geschraubt. Tellerkopf bleibt au&#223;en
+          auf der Strebe (kein Versenken). Vorbohren &#216;8.</span>
+        <span class="note">6 Kopfb&#228;nder &#215; 4 = <b>24 St&#252;ck</b></span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ============ SUMMARY ============ -->
+  <section class="sum">
+    <h2>St&#252;ckliste &#8211; nur diese drei Verbindungen</h2>
+    <div class="tblwrap">
+      <table>
+        <caption>abgeleitet aus dem Modell &#183; 4 Pfosten, 4 Ecken, 4 Sparren-Kreuzungen, 6 Kopfb&#228;nder</caption>
+        <thead>
+          <tr>
+            <th>Verbindung</th>
+            <th>Schraube (A2)</th>
+            <th>Kopf</th>
+            <th class="num">je Stelle</th>
+            <th class="num">Stellen</th>
+            <th class="num">gesamt</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Ecke: Pfosten &#8596; Rahmen</td>
+            <td class="scell">&#216;8 &#215; 140</td>
+            <td>Senkkopf</td>
+            <td class="num">2</td><td class="num">4</td><td class="num">8</td>
+          </tr>
+          <tr>
+            <td>Dach: Sparren &#8596; Balken</td>
+            <td class="scell">&#216;6 &#215; 120</td>
+            <td>Senkkopf</td>
+            <td class="num">2</td><td class="num">4</td><td class="num">8</td>
+          </tr>
+          <tr>
+            <td>Aussteifung: Kopfband</td>
+            <td class="scell">&#216;8 &#215; 140</td>
+            <td>Tellerkopf</td>
+            <td class="num">4</td><td class="num">6</td><td class="num">24</td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr><td colspan="5">Summe (ohne Pfostenfu&#223;)</td><td class="num">40</td></tr>
+        </tfoot>
+      </table>
+    </div>
+  </section>
+
+  <div class="notes">
+    <h3>F&#252;r die Werkstatt</h3>
+    <ul>
+      <li><b>Immer vorbohren</b> &#8212; &#216;8-Schrauben nahe Balken-/Sparrenende spalten sonst; Kernloch ~&#216;5&#8211;6.</li>
+      <li><b>Senkk&#246;pfe b&#252;ndig</b> (Ecke &amp; K&#228;mmung) &#8212; die K&#246;pfe liegen in der Dachebene, auf der die PC-Platte aufliegt.</li>
+      <li><b>Tellerk&#246;pfe au&#223;en lassen</b> (Kopfband) &#8212; nicht versenken, der Teller ist die Lastverteilung.</li>
+      <li><b>&#216;8 &#215; 140</b> &#252;bernimmt die urspr&#252;nglich geplante 200/180: die L&#228;nge tief in Pfosten/Balken war Abhebe-Reserve, getragen vom Pfostenfu&#223;-Anker + der ausgesteiften Box.</li>
+      <li><b>Pfostenfu&#223;</b> (U-St&#252;tzenfu&#223;, Bolzen + Schl&#252;sselschrauben) ist hier nicht dargestellt.</li>
+    </ul>
+  </div>
+</div>
+</body>
+</html>
