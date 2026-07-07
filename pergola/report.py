@@ -2,14 +2,17 @@
 
 Produces, in the output directory:
   * one PNG per view
-  * plan.pdf  — every view, one per page (vector, good for printing/emailing)
-  * index.html — a single self-contained-ish page embedding the PNGs
+  * plan.pdf  — every view + joinery detail, one per page, PLUS the
+    Materialliste and Verbindungsmittel (fastener) tables as print-only pages
+    (vector, good for printing/emailing — this is the file to hand a builder)
+  * index.html — a single self-contained-ish page embedding the PNGs, with the
+    same two tables rendered live in HTML instead of as an image
 """
 from __future__ import annotations
 
 import hashlib
 import os
-import shutil
+import textwrap
 from datetime import datetime
 from typing import List, Tuple
 from zoneinfo import ZoneInfo
@@ -18,8 +21,14 @@ from zoneinfo import ZoneInfo
 # correct DST handling (CET in winter, CEST in summer); %Z renders the label.
 _CET = ZoneInfo("Europe/Luxembourg")
 
+import matplotlib
+matplotlib.use("Agg")  # headless
+import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
+from matplotlib.patches import Rectangle
 from jinja2 import Template
+
+from . import style
 
 _HTML = Template(
     """<!doctype html>
@@ -64,13 +73,6 @@ _HTML = Template(
   .materials tfoot td { font-weight: 600; border-top: 2px solid #e2ddd2; }
   .materials .hint { padding: 10px 16px 14px; color: #666; font-size: 13px;
                      max-width: 70em; }
-  .materials .detaillink { padding: 12px 16px; margin: 0; font-size: 14px;
-                           border-bottom: 1px solid #f0ece2;
-                           background: #fbf7ee; }
-  .materials .detaillink a { color: #b3541f; font-weight: 600;
-                             text-decoration: none; }
-  .materials .detaillink a:hover, .materials .detaillink a:focus {
-                             text-decoration: underline; }
   figcaption .note { display: block; font-weight: 400; color: #555; font-size: 13px;
                      margin-top: 4px; max-width: 70em; }
   footer { padding: 16px 32px 40px; color: #999; font-size: 12px; }
@@ -193,12 +195,9 @@ _HTML = Template(
         </tr>
       </tfoot>
     </table>
-    {% if detail_page %}
-    <p class="detaillink">→ <a href="{{ detail_page }}">Detailzeichnung: wie Pfosten,
-       Rahmen &amp; Sparren verschraubt werden</a> — Schnitte + Draufsichten,
-       Kopfform (Senk-/Tellerkopf) und Menge je Verbindung.</p>
-    {% endif %}
-    <p class="hint">Automatisch aus dem 3D-Modell abgeleitet (Anzahl der
+    <p class="hint">Bebilderte Details je Verbindung (Schnitt, Lochbild, wie tief, welcher
+       Kopf) stehen weiter oben im Abschnitt „Holzverbindungen / timber joints“. Diese
+       Tabelle ist automatisch aus dem 3D-Modell abgeleitet (Anzahl der
        Pfostenfüße, Eckverbindungen, Sparren-Kreuzungen und Kopfbänder ×
        Schrauben je Stelle). Die Verbindungen sind reine Zimmermanns-
        Überblattungen, daher nur Schrauben + Bolzen, <b>keine Blechwinkel</b>.
@@ -289,6 +288,102 @@ def _versioned(path: str) -> str:
     return f"{name}?v={digest}"
 
 
+_TABLE_FIG_W = 11.5    # inches
+_TABLE_UNIT_W = 100.0  # data-coordinate width, split by col_widths fractions
+
+
+def _table_figure(title: str, headers: List[str], rows: List[List[str]],
+                  col_widths: List[float], wrap_chars: dict | None = None,
+                  bold_from: int | None = None):
+    """A print-friendly table page (for the PDF only — the HTML already shows
+    the same data as a live, sortable-by-eye table, so this isn't duplicated
+    as a PNG/HTML entry, only appended straight into the PDF).
+
+    Rows are laid out by hand rather than via ``ax.table``: a fastener spec
+    string easily runs to 100+ characters, and ``ax.table`` cells don't wrap
+    text, so long specs simply overflowed their cell and the page's right
+    edge. ``wrap_chars`` (col index -> max chars) wraps that column's text
+    over multiple lines instead, with the row growing to fit."""
+    wrap_chars = wrap_chars or {}
+    widths = [w * _TABLE_UNIT_W for w in col_widths]
+    x0s = [sum(widths[:i]) for i in range(len(widths))]
+
+    LINE_H = 0.85    # row-height units per wrapped text line
+    PAD = 0.55       # extra top/bottom padding per row
+    HEADER_H = 1.5
+
+    wrapped_rows = []
+    for row in rows:
+        cells = []
+        for i, val in enumerate(row):
+            w = wrap_chars.get(i)
+            lines = textwrap.wrap(str(val), w) if w else [str(val)]
+            cells.append(lines or [""])
+        n_lines = max(len(c) for c in cells)
+        wrapped_rows.append((cells, PAD + LINE_H * n_lines))
+
+    total_h = HEADER_H + sum(h for _, h in wrapped_rows)
+    scale = 0.115    # inches of figure height per row-height unit
+    fig_h = min(11.5, 1.1 + total_h * scale)
+    fig, ax = plt.subplots(figsize=(_TABLE_FIG_W, fig_h), dpi=150)
+    ax.axis("off")
+    ax.set_xlim(0, _TABLE_UNIT_W)
+    ax.set_ylim(total_h, 0)   # y grows downward, row 0 (header) at the top
+    fig.suptitle(title, fontsize=style.TITLE_FONTSIZE, fontweight="bold", x=0.05, ha="left")
+
+    ax.add_patch(Rectangle((0, 0), _TABLE_UNIT_W, HEADER_H, facecolor="#faf8f3",
+                           edgecolor="none", zorder=1))
+    for i, h in enumerate(headers):
+        ax.text(x0s[i] + 0.7, HEADER_H / 2.0, h, fontsize=8.5, fontweight="bold",
+                color="#555", va="center", zorder=2)
+
+    y = HEADER_H
+    for idx, (cells, rh) in enumerate(wrapped_rows):
+        is_total = bold_from is not None and idx >= bold_from
+        if is_total:
+            ax.add_patch(Rectangle((0, y), _TABLE_UNIT_W, rh, facecolor="#f6f4ef",
+                                   edgecolor="none", zorder=1))
+        for i, lines in enumerate(cells):
+            for li, line in enumerate(lines):
+                ax.text(x0s[i] + 0.7, y + PAD / 2.0 + LINE_H * (li + 0.5), line,
+                        fontsize=8.5, fontweight=("bold" if is_total else "normal"),
+                        va="center", zorder=2)
+        y += rh
+        ax.plot([0, _TABLE_UNIT_W], [y, y], color="#e2ddd2", lw=0.8, zorder=2)
+    ax.add_patch(Rectangle((0, 0), _TABLE_UNIT_W, total_h, fill=False,
+                           edgecolor="#cdc6b4", lw=1.0, zorder=3))
+    fig.tight_layout(rect=[0, 0, 1, 0.93])
+    return fig
+
+
+def _bom_table_figure(materials: dict):
+    rows = materials.get("rows") or []
+    if not rows:
+        return None
+    data = [[r["label"], r["material"], r["dims"], str(r["qty"]),
+             f"{r['amount']:g} {r['unit']}"] for r in rows]
+    for t in materials.get("totals") or []:
+        data.append([f"Summe {t['material']}", "", "", "", f"{t['amount']:g} {t['unit']}"])
+    return _table_figure("Materialliste / bill of materials",
+                         ["Bauteil", "Material", "Abmessungen B × H × L (mm)", "Anzahl", "Menge"],
+                         data, col_widths=[0.30, 0.17, 0.24, 0.10, 0.19],
+                         wrap_chars={0: 34, 1: 20}, bold_from=len(rows))
+
+
+def _fastener_table_figure(materials: dict):
+    fasteners = (materials or {}).get("fasteners") or {}
+    rows = fasteners.get("rows") or []
+    if not rows:
+        return None
+    data = [[f["label"], f["spec"], str(f["joints"]), str(f["per"]), f"{f['qty']} Stück"]
+            for f in rows]
+    data.append(["Summe Schrauben / Bolzen", "", "", "", f"{fasteners.get('total', 0)} Stück"])
+    return _table_figure("Verbindungsmittel / fasteners — Schrauben & Bolzen",
+                         ["Verbindung", "Schraube / Bolzen", "Stellen", "je Stelle", "Anzahl"],
+                         data, col_widths=[0.17, 0.53, 0.10, 0.10, 0.10],
+                         wrap_chars={0: 20, 1: 78}, bold_from=len(rows))
+
+
 def write_outputs(views: List[Tuple[str, str, "Figure"]], outdir: str,
                   config_name: str, units: str, model_paths: dict | None = None,
                   details: List[Tuple[str, str, "Figure", str]] | None = None,
@@ -321,6 +416,13 @@ def write_outputs(views: List[Tuple[str, str, "Figure"]], outdir: str,
             pdf.savefig(fig, facecolor="white")
             detail_entries.append((title, png_path, note))
             png_paths.append(png_path)
+        # Materialliste / fasteners: PDF-only pages (the HTML already shows this
+        # data as a live table right below, so it isn't also turned into a PNG).
+        if materials:
+            for table_fig in filter(None, (_bom_table_figure(materials),
+                                           _fastener_table_figure(materials))):
+                pdf.savefig(table_fig, facecolor="white")
+                plt.close(table_fig)
 
     # Cache-bust every generated asset by content hash so a redeploy is picked
     # up immediately (see _versioned). Done after the files exist on disk.
@@ -333,24 +435,13 @@ def write_outputs(views: List[Tuple[str, str, "Figure"]], outdir: str,
     downloads = [(_dl_labels[k], _versioned(model_paths[k]))
                  for k in ("step", "stl", "glb") if model_paths.get(k)]
 
-    # Supplementary screw-detail sheet (static asset): a hand-drawn page showing
-    # HOW the timber joints are screwed (sections + plans, head form + count per
-    # joint) — the model-derived table above lists the fasteners, this page shows
-    # the fitting. Copied into the output next to index.html and linked from the
-    # fasteners section (relative URL, so it also works on the public Pages site).
-    detail_page = None
-    _asset = os.path.join(os.path.dirname(__file__), "assets", "verschraubung.html")
-    if os.path.exists(_asset):
-        shutil.copyfile(_asset, os.path.join(outdir, "verschraubung.html"))
-        detail_page = _versioned(os.path.join(outdir, "verschraubung.html"))
-
     html_path = os.path.join(outdir, "index.html")
     with open(html_path, "w", encoding="utf-8") as fh:
         fh.write(_HTML.render(views=png_entries, details=detail_entries,
                               config_name=config_name,
                               units=units, pdf_name=_versioned(pdf_path),
                               model_glb=glb_name, downloads=downloads,
-                              materials=materials, detail_page=detail_page,
+                              materials=materials,
                               build_time=datetime.now(_CET).strftime(
                                   "%Y-%m-%d %H:%M:%S %Z")))
 

@@ -176,6 +176,16 @@ _FASTENERS = {
 _FASTENER_ORDER = ["anchor", "corner", "kaemmung", "brace"]
 
 
+def fastener_spec(key: str):
+    """Return ``(Verbindung-Label, [(Schraubentyp · Größe, Stück je Stelle), ...])``
+    for one joint key (``anchor`` | ``corner`` | ``kaemmung`` | ``brace``).
+
+    Single source of truth for the exact screw/bolt spec, so the joinery detail
+    drawings (``joinery.py``) quote the same numbers as this shopping list
+    instead of a second, driftable copy."""
+    return _FASTENERS[key]
+
+
 def _classify_beams(elements) -> tuple:
     """Count the perimeter-ring beams by run direction: ``(n_cross, n_side)``.
 

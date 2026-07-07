@@ -40,7 +40,7 @@ from matplotlib.patches import Rectangle, Polygon
 import matplotlib.patches as mpatches
 import numpy as np
 
-from . import style
+from . import materials, style
 from .geometry import X, Y, Z, bounds
 from .model import Config
 
@@ -111,6 +111,103 @@ def _iso_arrow(ax, x, y, z0, z1, text):
     ax.annotate("", p1, p0, arrowprops=dict(arrowstyle="-|>", color="#222", lw=2.2))
     pm = _iso(x, y, (z0 + z1) / 2)
     ax.text(pm[0] + 6, pm[1], text, fontsize=8, ha="left", va="center")
+
+
+# --------------------------------------------------------------------------- #
+#  Detail 0: the post foot — U-Stützenfuß already cast into the concrete, the
+#  post is only SET ON and bolted. This is the joint that matters the moment
+#  the posts go onto footings poured earlier, before anything else is built.
+# --------------------------------------------------------------------------- #
+def _render_pfostenfuss(cfg: Config):
+    ps = cfg.pergola.posts
+    an = ps.anchor
+    if an is None:
+        return None
+
+    sx, sy = ps.size_x, ps.size_y
+    collar = an.width + 2.0 * an.plate           # steel footprint across the milled (wide) face
+    wide_is_y = sy >= sx
+    ax_, ay_ = (sx, collar) if wide_is_y else (collar, sy)   # anchor footprint (x, y)
+    gap, wh = an.air_gap, an.wing_height
+    pier = ps.footing.size
+    pier_h = min(ps.footing.depth, 200.0)         # only draw the top of the pier, not its full depth
+
+    STEEL = style.CATEGORY_STYLE["anchor"]
+    CONC = style.CATEGORY_STYLE["footing"]
+    POST = style.CATEGORY_STYLE["post"]
+    _, specs = materials.fastener_spec("anchor")
+    (bolt_spec, _), (key_spec, _) = specs
+
+    fig, axs = plt.subplots(1, 2, figsize=(12.0, 6.6), dpi=DPI)
+    fig.suptitle("Holzverbindung 0 — Pfostenfuß: Pfosten auf den einbetonierten U-Stützenfuß setzen",
+                 fontsize=style.TITLE_FONTSIZE, fontweight="bold", x=0.04, ha="left")
+    fig.text(0.04, 0.92, f"Anker {_fmt(an.width)} mm, auf den Pfosten {_fmt(sx)}×{_fmt(sy)} gefräst "
+             f"(bündig) · Luftspalt {_fmt(gap)} mm zum Beton · Maße in {cfg.units}",
+             fontsize=style.LABEL_FONTSIZE, color="#555", ha="left")
+
+    # ---- Panel 1: exploded — pier already there, collar, then the post ------
+    ax = axs[0]
+    _panel(ax, "1) Aufbau am Fuß, von unten nach oben (Anker + Beton sind schon da)")
+    px0, px1 = -pier / 2.0, pier / 2.0
+    _box3d(ax, px0, px1, px0, px1, -pier_h, 0.0, CONC["face"], CONC["edge"], z=1)
+    ax.annotate("Betonfundament\n(bereits gegossen)", _iso(px1, px1 * 0.2, -pier_h * 0.45),
+                (px1 + ax_ * 0.9, -pier_h * 0.3), fontsize=7.5, color="#555",
+                arrowprops=dict(arrowstyle="->", color="#888"))
+    r0, r1 = _iso(0, 0, -pier_h * 0.6), _iso(0, 0, gap + wh * 0.25)
+    ax.plot([r0[0], r1[0]], [r0[1], r1[1]], color="#8a8f93", lw=2.0, ls=(0, (1, 1.4)), zorder=5)
+    ax.annotate("Rippstange\n(einbetoniert)", r1, (r1[0] - ax_ * 1.8, r1[1] + wh * 0.25),
+                fontsize=7.5, color="#777", ha="right", arrowprops=dict(arrowstyle="->", color="#999"))
+
+    axx0, axx1 = -ax_ / 2.0, ax_ / 2.0
+    axy0, axy1 = -ay_ / 2.0, ay_ / 2.0
+    _box3d(ax, axx0, axx1, axy0, axy1, 0.0, gap + wh, STEEL["face"], STEEL["edge"], z=3, alpha=0.9)
+    ax.annotate(f"U-Stützenfuß (Stahl)\nLuftspalt {_fmt(gap)} + Wangen {_fmt(wh)}",
+                _iso(axx1, ay_ * 0.2, gap + wh), (axx1 + ax_ * 0.7, gap + wh + wh * 0.4),
+                fontsize=7.5, color="#444", arrowprops=dict(arrowstyle="->", color="#666"))
+
+    # The post's lower end sits INSIDE the steel collar (from z=gap, floating
+    # above the concrete, up through the wing zone) — draw that hidden stretch
+    # as a dashed ghost so the collar stays visible, then the real wood post
+    # continues solid above the collar top.
+    _ghost3d(ax, -sx / 2.0, sx / 2.0, -sy / 2.0, sy / 2.0, gap, gap + wh,
+            color=POST["edge"], z=4)
+    pz0, pz1 = gap + wh, gap + wh + sy * 2.6
+    _box3d(ax, -sx / 2.0, sx / 2.0, -sy / 2.0, sy / 2.0, pz0, pz1, POST["face"], POST["edge"], z=6)
+    ax.annotate(f"Pfosten {_fmt(sx)}×{_fmt(sy)}\nsteht {_fmt(gap)} mm ÜBER dem Beton\n"
+                "(Hirnholz lüftet, fault nicht) —\nunten in den Wangen verborgen",
+                _iso(-sx / 2.0, -sy / 2.0, gap), (-ax_ * 2.7, gap - wh * 0.55), fontsize=7.5,
+                color="#c0392b", ha="right", arrowprops=dict(arrowstyle="->", color="#c0392b"))
+    _iso_arrow(ax, 0, -ay_ * 0.9, pz1 + sy * 0.35, gap + wh + sy * 0.15, "aufsetzen")
+    ax.set_xlim(-ax_ * 3.4, ax_ * 2.8); ax.set_ylim(-pier_h * 1.15, pz1 + sy * 0.6)
+
+    # ---- Panel 2: front-on hole pattern of one wing --------------------------
+    ax = axs[1]
+    _panel(ax, "2) Lochbild einer Wange — Bolzen mittig, Schrauben oben/unten versetzt")
+    fw, fh = ay_, gap + wh
+    ax.add_patch(Rectangle((-fw / 2.0, 0.0), fw, fh, facecolor=STEEL["face"],
+                           edgecolor=STEEL["edge"], lw=1.4, zorder=2))
+    ax.add_patch(Rectangle((-fw / 2.0, 0.0), fw, gap, facecolor="none", edgecolor="#999",
+                           lw=0.9, ls=(0, (3, 2)), zorder=3))
+    ax.text(0, gap / 2.0, f"Luftspalt {_fmt(gap)}", ha="center", va="center",
+            fontsize=7, color="#777")
+    r = max(fw, wh) * 0.07
+    key_y1, bolt_y, key_y2 = gap + wh * 0.82, gap + wh * 0.5, gap + wh * 0.18
+    for hy, lbl, col in ((key_y1, "Schlüsselschraube", "#cf4520"),
+                         (bolt_y, "Durchgangsbolzen", "#1e5aa8"),
+                         (key_y2, "Schlüsselschraube", "#cf4520")):
+        ax.add_patch(plt.Circle((0, hy), r, facecolor="white", edgecolor=col, lw=2.0, zorder=5))
+        ax.plot([-r * 0.6, r * 0.6], [hy, hy], color=col, lw=1.4, zorder=6)
+        ax.plot([0, 0], [hy - r * 0.6, hy + r * 0.6], color=col, lw=1.4, zorder=6)
+        ax.annotate(lbl, (fw / 2.0, hy), (fw / 2.0 + fw * 0.15, hy), fontsize=7.5, color=col,
+                    va="center", arrowprops=dict(arrowstyle="->", color=col))
+    ax.annotate("durchgehend + Mutter/\nScheibe auf der Rückseite", (fw / 2.0, bolt_y),
+                (fw / 2.0 + fw * 0.15, bolt_y - wh * 0.22), fontsize=7, color="#1e5aa8", va="center")
+    ax.set_xlim(-fw * 1.5, fw * 2.4); ax.set_ylim(-fh * 0.08, fh * 1.12)
+
+    fig.text(0.5, 0.015,
+             f"{bolt_spec}  ·  {key_spec}", ha="center", fontsize=8, color="#333")
+    fig.tight_layout(rect=[0, 0.04, 1, 0.9])
+    return fig
 
 
 # --------------------------------------------------------------------------- #
@@ -290,6 +387,81 @@ def _render_corner(cfg: Config):
 
 
 # --------------------------------------------------------------------------- #
+#  Detail 3: the knee brace (Kopfband) — post <-> beam, no cutting, just screws
+# --------------------------------------------------------------------------- #
+def _render_brace(cfg: Config):
+    br = cfg.pergola.braces
+    if br is None:
+        return None
+
+    ps, bm = cfg.pergola.posts, cfg.pergola.beams
+    t, L = br.size, br.length
+    _, specs = materials.fastener_spec("brace")
+    scr_spec, per_end = specs[0]
+    per_end //= 2   # split the "per joint" count evenly over foot + head
+
+    fig, ax = plt.subplots(figsize=(11.0, 6.4), dpi=DPI)
+    fig.suptitle("Holzverbindung 3 — Kopfband: Pfosten ↔ Balken aussteifen",
+                 fontsize=style.TITLE_FONTSIZE, fontweight="bold", x=0.04, ha="left")
+    fig.text(0.04, 0.90, f"45°-Strebe {_fmt(t)}×{_fmt(t)}, Schenkellänge {_fmt(L)} mm — nur "
+             f"verschraubt, kein Ausklinken · Maße in {cfg.units}",
+             fontsize=style.LABEL_FONTSIZE, color="#555", ha="left")
+
+    POST, BEAM = style.CATEGORY_STYLE["post"], style.CATEGORY_STYLE["beam"]
+    BRACE = style.CATEGORY_STYLE["brace"]
+
+    # Elevation, in the plane of the brace: beam along the top, post along the
+    # left, brace as a t-wide band running at 45 deg between them.
+    beam_y0 = ps.size_x * 2.2
+    ax.add_patch(Rectangle((0, beam_y0), bm.width * 5.0, bm.height, facecolor=BEAM["face"],
+                           edgecolor=BEAM["edge"], lw=1.2, zorder=2))
+    ax.text(bm.width * 3.2, beam_y0 + bm.height + t * 0.35,
+            f"Rahmenbalken {_fmt(bm.width)}×{_fmt(bm.height)}", fontsize=8, color="#555")
+    ax.add_patch(Rectangle((0, 0), ps.size_x, beam_y0 + bm.height, facecolor=POST["face"],
+                           edgecolor=POST["edge"], lw=1.2, zorder=2))
+    ax.text(-ps.size_x * 0.3, beam_y0 * 0.4, f"Pfosten\n{_fmt(ps.size_x)}×{_fmt(ps.size_y)}",
+            fontsize=8, color="#555", ha="right", va="center")
+
+    foot = np.array([ps.size_x, beam_y0 - L])
+    head = np.array([ps.size_x + L, beam_y0])
+    u = (head - foot) / np.linalg.norm(head - foot)
+    p = np.array([-u[1], u[0]]) * (t / 2.0)
+    poly = [foot - p, foot + p, head + p, head - p]
+    ax.add_patch(Polygon(poly, closed=True, facecolor=BRACE["face"], edgecolor=BRACE["edge"],
+                         lw=1.2, zorder=3))
+    mid = (foot + head) / 2.0
+    ax.annotate(f"Kopfband {_fmt(t)}×{_fmt(t)}\n45° · L {_fmt(L)}", mid,
+                (mid[0] + t * 1.6, mid[1] - t * 0.4), fontsize=8, color="#333",
+                arrowprops=dict(arrowstyle="->", color="#555"))
+
+    # Screws: at the foot (into the post, axis-aligned into the post face i.e.
+    # roughly horizontal here) and the head (into the beam underside, roughly
+    # vertical), each spot getting `per_end` fixings side by side along the brace.
+    def _screws(anchor, along, n, length):
+        perp = np.array([-along[1], along[0]])
+        offs = np.linspace(-1, 1, n) * (t * 0.22) if n > 1 else [0.0]
+        for o in offs:
+            base = anchor + perp * o
+            tip = base + along * length
+            ax.annotate("", tip, base, arrowprops=dict(arrowstyle="-|>", color="#cf4520", lw=1.8))
+
+    _screws(foot + u * (t * 0.25), u, per_end, t * 1.5)
+    _screws(head - u * (t * 0.25), -u, per_end, t * 1.5)
+    ax.annotate(f"{per_end}× in den Pfosten", foot, (foot[0] - t * 0.4, foot[1] - t * 2.0),
+                fontsize=7.5, color="#cf4520", ha="right")
+    ax.annotate(f"{per_end}× in den Balken", head, (head[0] + t * 0.4, head[1] + t * 2.0),
+                fontsize=7.5, color="#cf4520")
+
+    ax.set_aspect("equal"); ax.axis("off")
+    ax.set_xlim(-ps.size_x * 2.2, head[0] + t * 3.5)
+    ax.set_ylim(foot[1] - t * 3.5, beam_y0 + bm.height + t * 3.0)
+    fig.text(0.5, 0.02, f"{scr_spec}  ·  Tellerkopf außen (nicht versenken)",
+             ha="center", fontsize=8, color="#333")
+    fig.tight_layout(rect=[0, 0.05, 1, 0.87])
+    return fig
+
+
+# --------------------------------------------------------------------------- #
 #  Detail 3: locator plan — every joint, drawn from the box model
 # --------------------------------------------------------------------------- #
 def _plan_bbox(box):
@@ -369,48 +541,74 @@ def _render_locator(elements, cfg: Config):
 #  Public entry: build the joinery detail figures for this config
 # --------------------------------------------------------------------------- #
 def render_joinery(elements, cfg: Config) -> List[Tuple[str, str, "plt.Figure", str]]:
-    """Return ``(key, title, figure, html_note)`` for each joinery detail.
+    """Return ``(key, title, figure, html_note)`` for each joinery detail that
+    applies to this config.
 
-    Only meaningful for ``framing: flush`` (the housed-rafter / perimeter-ring
-    build, where members must interlock). For ``stacked`` framing the rafters
-    simply rest on top of the beams, so the list is empty.
+    The post-foot (``anchor``) and knee-brace (``braces``) details apply
+    regardless of framing and are skipped if that feature isn't configured.
+    The cross-lap / corner details are only meaningful for ``framing: flush``
+    (the housed-rafter / perimeter-ring build, where members must interlock);
+    for ``stacked`` framing the rafters simply rest on top of the beams.
     """
-    if cfg.pergola.framing != "flush":
-        return []
-
     pg = cfg.pergola
-    rh = pg.rafters.height
-    bh = pg.beams.height
-    db, dr = _lap_split(rh)
-    bear = bh - db
-    tilt = pg.roof.tilt_deg
+    out: List[Tuple[str, str, "plt.Figure", str]] = []
 
-    return [
-        ("detail_locator", "Holzverbindungen — Lageplan",
-         _render_locator(elements, cfg),
-         "Übersicht, wo welche Verbindung sitzt: rote Ringe = Sparren kreuzt einen "
-         "Front-/Hinterbalken (Kämmung); grüne Quadrate = die zwei Seitenbalken des "
-         "Rahmenrings treffen über einem Pfosten auf die Querbalken (Eck-Überblattung). "
-         "Die Sparren (60×80) sind nur die <b>inneren</b> Hölzer — die äußeren Längskanten "
-         "sind <b>Seitenbalken</b> des Rings, keine Sparren."),
-        ("detail_kaemmung", "Detail 1 — Kreuzüberblattung (Sparren × Balken)",
-         _render_kaemmung(cfg),
-         f"Der Sparren kreuzt den Front-/Hausbalken und <b>endet bündig an dessen "
-         f"Außenkante</b> — kein Überstand. Aus beiden Hölzern wird dafür ein Kanal "
-         f"ausgenommen, der Sparren fällt von oben ein, die Oberkanten fluchten (eine "
-         f"Dachebene). Die Überlappung von {_fmt(rh)} mm wird <b>balkenschonend</b> geteilt: "
-         f"nur {_fmt(db)} mm aus der Balkenoberkante (der {_fmt(bh)}-er Balken behält "
-         f"{_fmt(bh - db)} mm) + {_fmt(dr)} mm aus der Sparren­unterkante. Der tiefere "
-         f"Schnitt sitzt im Sparren, und zwar genau an seinem <b>Auflager-Ende</b> (dort ist "
-         f"das Biegemoment ~0, kostet also keine Tragfähigkeit). Auflagerfläche "
-         f"<b>waagerecht</b> bei z = +{_fmt(bear)} mm schneiden — wegen der {_fmt(tilt)}°-"
-         f"Neigung steht der Sparren sonst auf einer Kante."),
-        ("detail_corner", "Detail 2 — Eck-Überblattung (Balken × Balken)",
-         _render_corner(cfg),
-         "An den vier Ecken treffen Seitenbalken und Front-/Hinterbalken über einem Pfosten "
-         "aufeinander — beide gleich hoch. Klassisches Halbholz: jeden Balken im "
-         "Überlappungsquadrat auf <b>halbe Höhe</b> ausklinken, ineinanderlegen, von oben mit "
-         "Dübel/Schraube auf den Pfosten verbinden. Wichtig: die Ecke wird dadurch genau so "
-         "hoch wie <b>ein</b> Balken (60+60=120), nicht doppelt — es liegen zwei "
-         "<i>halbierte</i> Balken ineinander, nicht zwei volle aufeinander."),
-    ]
+    fuss_fig = _render_pfostenfuss(cfg)
+    if fuss_fig is not None:
+        bolt_spec, _ = materials.fastener_spec("anchor")[1][0]
+        key_spec, key_n = materials.fastener_spec("anchor")[1][1]
+        out.append(("detail_pfostenfuss", "Detail 0 — Pfostenfuß (Anker → Pfosten)", fuss_fig,
+            f"Der U-Stützenfuß steckt schon im Beton (Rippstange einbetoniert) — der Pfosten wird "
+            f"nur noch <b>aufgesetzt</b>, {_fmt(pg.posts.anchor.air_gap)} mm über dem Beton "
+            f"(Luftspalt, damit das Hirnholz lüftet statt zu faulen). Je Fuß: <b>1× {bolt_spec}</b> "
+            f"mittig durch beide Wangen + Pfosten (mit Mutter/Scheiben beidseitig), dazu "
+            f"<b>{key_n}× {key_spec}</b> (je zwei pro Wange, oben/unten versetzt, nur ins Holz — "
+            f"vorbohren nicht vergessen)."))
+
+    if pg.framing == "flush":
+        rh, bh = pg.rafters.height, pg.beams.height
+        db, dr = _lap_split(rh)
+        bear = bh - db
+        tilt = pg.roof.tilt_deg
+        kaemmung_spec, kaemmung_n = materials.fastener_spec("kaemmung")[1][0]
+        corner_spec, corner_n = materials.fastener_spec("corner")[1][0]
+
+        out.append(("detail_locator", "Holzverbindungen — Lageplan",
+             _render_locator(elements, cfg),
+             "Übersicht, wo welche Verbindung sitzt: rote Ringe = Sparren kreuzt einen "
+             "Front-/Hinterbalken (Kämmung); grüne Quadrate = die zwei Seitenbalken des "
+             "Rahmenrings treffen über einem Pfosten auf die Querbalken (Eck-Überblattung). "
+             "Die Sparren (60×80) sind nur die <b>inneren</b> Hölzer — die äußeren Längskanten "
+             "sind <b>Seitenbalken</b> des Rings, keine Sparren."))
+        out.append(("detail_kaemmung", "Detail 1 — Kreuzüberblattung (Sparren × Balken)",
+             _render_kaemmung(cfg),
+             f"Der Sparren kreuzt den Front-/Hausbalken und <b>endet bündig an dessen "
+             f"Außenkante</b> — kein Überstand. Aus beiden Hölzern wird dafür ein Kanal "
+             f"ausgenommen, der Sparren fällt von oben ein, die Oberkanten fluchten (eine "
+             f"Dachebene). Die Überlappung von {_fmt(rh)} mm wird <b>balkenschonend</b> geteilt: "
+             f"nur {_fmt(db)} mm aus der Balkenoberkante (der {_fmt(bh)}-er Balken behält "
+             f"{_fmt(bh - db)} mm) + {_fmt(dr)} mm aus der Sparren­unterkante. Der tiefere "
+             f"Schnitt sitzt im Sparren, und zwar genau an seinem <b>Auflager-Ende</b> (dort ist "
+             f"das Biegemoment ~0, kostet also keine Tragfähigkeit). Auflagerfläche "
+             f"<b>waagerecht</b> bei z = +{_fmt(bear)} mm schneiden — wegen der {_fmt(tilt)}°-"
+             f"Neigung steht der Sparren sonst auf einer Kante. Je Kreuzung: <b>{kaemmung_n}× "
+             f"{kaemmung_spec}</b>."))
+        out.append(("detail_corner", "Detail 2 — Eck-Überblattung (Balken × Balken)",
+             _render_corner(cfg),
+             "An den vier Ecken treffen Seitenbalken und Front-/Hinterbalken über einem Pfosten "
+             "aufeinander — beide gleich hoch. Klassisches Halbholz: jeden Balken im "
+             "Überlappungsquadrat auf <b>halbe Höhe</b> ausklinken, ineinanderlegen, von oben mit "
+             "Dübel/Schraube auf den Pfosten verbinden. Wichtig: die Ecke wird dadurch genau so "
+             "hoch wie <b>ein</b> Balken (60+60=120), nicht doppelt — es liegen zwei "
+             f"<i>halbierte</i> Balken ineinander, nicht zwei volle aufeinander. Je Ecke: "
+             f"<b>{corner_n}× {corner_spec}</b>."))
+
+    brace_fig = _render_brace(cfg)
+    if brace_fig is not None:
+        brace_spec, brace_n = materials.fastener_spec("brace")[1][0]
+        out.append(("detail_brace", "Detail 3 — Kopfband (Aussteifung)", brace_fig,
+            f"Reine Verschraubung, kein Ausklinken: <b>{brace_n}× {brace_spec}</b> je Kopfband "
+            f"(die Hälfte im Fuß Richtung Pfosten, die andere Hälfte im Kopf Richtung Balken); "
+            f"der Tellerkopf bleibt außen auf der Strebe liegen (nicht versenken)."))
+
+    return out
