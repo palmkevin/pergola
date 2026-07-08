@@ -152,10 +152,12 @@ def summarize(elements) -> dict:
 # equivalent fallback. Nuts/washers are usually NOT in the bolt listing — buy A2
 # separately.
 #
-# Corrosion class A2 (Edelstahl) throughout — an exposed outdoor pergola under a
-# clear panel, and the post base sits in the damp ground zone; mixing verzinkt
-# screws with A2 bolts there would galvanically sacrifice the zinc. verzinkt is
-# only a cheaper fallback for a fully covered build.
+# Corrosion class: A2 (Edelstahl) for the wet/critical joints — the post base
+# (damp ground zone; verzinkt next to A2 there would galvanically sacrifice the
+# zinc) and the roof-plane laps (Eck-Überblattung, Kämmung). The knee braces sit
+# UNDER the covered roof, so WIROX (zinc-nickel, rated for a covered exterior) is
+# used there as the cheaper choice — a deliberate cost trade-off, still well above
+# bright zinc, which must NOT be used anywhere outdoors here.
 #   (Bauteil/Verbindung, [(Schraubentyp · Größe, fixings per joint), …])
 _FASTENERS = {
     "anchor":   ("Pfosten → U-Stützenfuß", [
@@ -163,13 +165,13 @@ _FASTENERS = {
         ("Schlüsselschraube/Sechskant-Holzschraube Ø10 × 60 (in den Pfosten, 2 je Wange; mit Scheibe), Edelstahl A2", 4),
     ]),
     "corner":   ("Eck-Überblattung (Balken × Balken, über Pfosten)", [
-        ("Konstruktionsschraube Ø8 × 200, Torx · Teilgewinde, Edelstahl A2", 2),
+        ("Konstruktionsschraube Ø8 × 140, Senkkopf, Torx · Teilgewinde, Edelstahl A2", 2),
     ]),
     "kaemmung": ("Kämmung (Sparren × Balken)", [
-        ("Konstruktionsschraube Ø6 × 120, Torx · Teilgewinde, Edelstahl A2", 2),
+        ("Konstruktionsschraube Ø6 × 120, Senkkopf, Torx · Teilgewinde, Edelstahl A2", 2),
     ]),
     "brace":    ("Kopfband (Fuß + Kopf)", [
-        ("Konstruktionsschraube Ø8 × 180, Torx · Teilgewinde, Edelstahl A2", 4),
+        ("Konstruktionsschraube Ø8 × 140, Tellerkopf, Torx · Teilgewinde, WIROX (Zink-Nickel, überdacht)", 4),
     ]),
 }
 # Display order of the fastener rows.
