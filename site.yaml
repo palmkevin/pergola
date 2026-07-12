@@ -18,37 +18,42 @@ site:
 
 pergola:
   type: attached        # "attached" (against a wall) or "freestanding"
-  origin: [0, 605]      # near-left (min x, min y) corner of the footprint. y starts
+  origin: [0, 595]      # near-left (min x, min y) corner of the footprint. y starts
                         # at the FRONT roof edge (= the front beam's outer face), since
                         # the roof no longer overhangs the posts (see footprint.depth).
   footprint:
-    # FINAL as-built outer footprint (post outer-face to outer-face), measured once
-    # the post anchors were cast into the concrete footings: 236.5 x 170.0 cm. This
-    # replaces the earlier design estimate (240 x 178 cm) — see posts.rows_y_from_wall
-    # below for how that changes the front post row's position.
-    width: 2365         # x extent (236.5 cm, along the house wall) = post-to-post outer
+    # FINAL as-built outer footprint (post outer-face to outer-face), re-measured after
+    # the pergola was fully set up: 237.0 x 171.0 cm (2026-07-12), superseding the
+    # earlier 236.5 x 170.0 cm figure taken right after the footings were cast — see
+    # posts.rows_y_from_wall below for how the 1 cm depth change moves the front post row.
+    width: 2370         # x extent (237.0 cm, along the house wall) = post-to-post outer
                         # span (posts sit flush at the side edges, so NO side overhang)
-    depth: 1995         # y extent: front roof edge (= front beam) .. house wall (199.5 cm,
+    depth: 2005         # y extent: front roof edge (= front beam) .. house wall (200.5 cm,
                         # away from the house). The roof itself does NOT span this whole
-                        # depth — it now STOPS 29.5 cm in front of the wall: the pergola was
+                        # depth — it stops 29.5 cm in front of the wall: the pergola was
                         # pulled off the wall so its house-side roof edge lands exactly at
                         # the bracket that carries the garden-house's upper grey fascia board
                         # (so that bracket can stay as-is). The house-side post row therefore
                         # stands on its own dug footing in the ground (like the front row),
                         # NOT on the old foundation step. This depth is kept TO the wall so
                         # the slope/clear_height reference (y = 2600, the wall) is unchanged.
-                        # (Front edge fixed at y = 605, so the roof depth is now 1700 mm —
-                        # the as-built 170.0 cm outer span.)
-  clear_height: 2220    # underside of the roof on the HIGH (house) side. Sized so the
-                        # roof's HIGHEST point = exactly 232 cm including the covering
-                        # (was 222 cm = the old garden-house gutter/lower-board underside;
-                        # removing that lower board frees 10 cm up to the upper board). That
-                        # highest point is the panel back (house-side) edge at roof_y1 =
-                        # 2305 mm, i.e. 29.5 cm IN FRONT of the wall, so the slope drop from
-                        # the clear_height reference (the wall, y = 2600) to that edge is
-                        # (2600-2305)*tan(5deg) ~ 25.8 mm:
-                        # 2220 + beam 120 + panel 6 - 25.8 = 2320 mm (232.0 cm).
-                        # Recompute this whenever roof.tilt_deg or roof.thickness change.
+                        # (Front edge fixed at y = 595, so the roof depth is now 1710 mm —
+                        # the final as-built 171.0 cm outer span.)
+  clear_height: 2193.9  # a derived working value, NOT itself a measured fact — picked
+                        # (together with roof.tilt_deg below) so the roof's FINAL as-built
+                        # heights (measured 2026-07-12) come out right: roof top = 230.0 cm
+                        # at the house side, 218.5 cm at the front side — replacing the
+                        # earlier 232.0 cm single-point design figure. The house-side point
+                        # is the panel back (house-side) edge at roof_y1 = 2305 mm (29.5 cm
+                        # in front of the wall, unchanged — fixed by the garden-house
+                        # bracket); the front point is the front beam's outer face at
+                        # roof_y0 = 595 mm (see posts.rows_y_from_wall below).
+                        #   top(y) = clear_height - (2600 - y)*tan(tilt_deg) + beam 120 + panel 6
+                        #   top(2305) = 230.0 cm  ->  clear_height - 295*tan(tilt_deg)  = 2174
+                        #   top(595)  = 218.5 cm  ->  clear_height - 2005*tan(tilt_deg) = 2059
+                        # Solving both together: tilt_deg = 3.85 deg, clear_height = 2193.9 mm.
+                        # Recompute both whenever the as-built heights, footprint or
+                        # roof.thickness change.
   framing: flush        # "flush" = one-level roof: a perimeter beam ring with the
                         # rafters housed flush BETWEEN the front/back beams (tops
                         # aligned), so the roof is a single plane (no stacked layer).
@@ -68,19 +73,19 @@ pergola:
     count_y: 2
     # In x (along the wall) the posts sit at the very edges: their outer faces are
     # flush with the roof's side edges, so there is NO side overhang (the roof
-    # width = the post-to-post outer span = 236.5 cm). In y there is now NO overhang
+    # width = the post-to-post outer span = 237.0 cm). In y there is now NO overhang
     # either: the roof ends right over each beam (front and house side). Post-row
     # centres from the house wall: house side 335 mm (its roof edge then lands at
     # 295 mm = 29.5 cm from the wall, at the upper-fascia bracket — unchanged, this
-    # side is fixed by the existing garden-house bracket), front row 1955 mm (moved
-    # in from the earlier 2035 mm design estimate to match the as-built anchor
-    # position). Centre-to-centre is now 1620 mm, so with an 80 mm deep post the
-    # CLEAR inner gap between the rows in y is 1620 - 80 = 1540 mm (154.0 cm); the
-    # OUTER (post face to post face) span is 1620 + 80 = 1700 mm (170.0 cm) — the
-    # final as-built depth. (The front/back beams, 80 mm in y, sit flush on the
-    # 80 mm post depth; the side beams overhang the 60 mm post width by 10 mm each
-    # side — unavoidable with a rectangular post.)
-    rows_y_from_wall: [335, 1955]   # post-row centre distances from the house wall
+    # side is fixed by the existing garden-house bracket), front row 1965 mm (final
+    # re-measurement, 10 mm further out than the earlier 1955 mm as-built figure).
+    # Centre-to-centre is now 1630 mm, so with an 80 mm deep post the CLEAR inner
+    # gap between the rows in y is 1630 - 80 = 1550 mm (155.0 cm); the OUTER (post
+    # face to post face) span is 1630 + 80 = 1710 mm (171.0 cm) — the final as-built
+    # depth. (The front/back beams, 80 mm in y, sit flush on the 80 mm post depth;
+    # the side beams overhang the 60 mm post width by 10 mm each side — unavoidable
+    # with a rectangular post.)
+    rows_y_from_wall: [335, 1965]   # post-row centre distances from the house wall
     footing:
       # Square concrete pier under each post — BOTH rows now, since the house-side
       # row stands in the ground 29.5 cm off the wall (no longer on a foundation step
@@ -90,7 +95,7 @@ pergola:
       #  - Bearing/Druck is irrelevant: each post carries only ~1 kN, any size holds.
       #  - The governing load is WIND UPLIFT/Sog on the light mono-pitch roof
       #    (~0.85 kN/post) plus overturning — resisted by the pier MASS and, mostly,
-      #    by the whole braced frame acting as one rigid box over its 2.4 x 1.7 m
+      #    by the whole braced frame acting as one rigid box over its ~2.37 x 1.71 m
       #    footprint (one corner down, the opposite up), not by each pier alone.
       #  - DEPTH gives mass + the anti-tip lever arm AND must house the ~200 mm
       #    cast-in ribbed anchor rod with cover below it -> ~300 mm is the hard floor,
@@ -150,10 +155,10 @@ pergola:
     height: 80
     spacing: 660        # target clear field — used ONLY when the roof is not
                         # panelised. Here roof.panel_width is set, so the rafters are
-                        # placed UNDER the panel joints instead (x ~= 788 and 1577): 2
-                        # interior rafters, 3 fields of ~788 mm. Each panel edge then
+                        # placed UNDER the panel joints instead (x = 790 and 1580): 2
+                        # interior rafters, 3 fields of 790 mm. Each panel edge then
                         # rests on a support and each joint is carried by a rafter. The
-                        # clear field (~685-730 mm) stays within a 6 mm solid PVC
+                        # clear field (~718-728 mm) stays within a 6 mm solid PVC
                         # sheet's allowable support spacing (~900 mm).
     direction: y        # rafters span along y (down the slope)
 
@@ -166,29 +171,32 @@ pergola:
                         # the ~740 mm rafter field with ease (solid sheets allow ~900 mm).
     material: Polycarbonat (massiv)   # cover material, shown in the Materialliste.
                         # NOMINAL panel size (= structure raster, the COLD reference):
-                        # ~788.3 (x) x ~1756.7 (slope length) x 6 mm, following the
-                        # as-built 236.5 x 170.0 cm footprint. The ~1756.7 is the slope
-                        # length: 1700 mm horizontal roof depth + 50 mm front overhang
-                        # (front_overhang below) -> 1750 mm horizontal, / cos 5deg.
+                        # 790.0 (x) x ~1764.0 (slope length) x 6 mm, following the final
+                        # as-built 237.0 x 171.0 cm footprint and 3.85 deg as-built pitch.
+                        # The ~1764.0 is the slope length: 1710 mm horizontal roof depth +
+                        # 50 mm front overhang (front_overhang below) -> 1760 mm
+                        # horizontal, / cos 3.85 deg.
                         # ----------------------------------------------------------------
                         # ORDER / CUT spec (what to actually buy): 3 x glasklare 6 mm
-                        # PC-Massivplatte, each cut ~5 mm UNDER nominal -> ~783 x 1752 mm
+                        # PC-Massivplatte, each cut ~5 mm UNDER nominal -> ~785 x 1759 mm
                         # (Bauhaus Zuschnitt or a plastics cut-to-size shop). The 5 mm is
                         # the thermal expansion gap (see THERMAL EXPANSION below); the
                         # H-/edge profiles (50/40 mm wide) cover the resulting fuge. Do
-                        # NOT cut a tight 788.3/1756.7 — solid PC must have room to grow.
+                        # NOT cut a tight 790.0/1764.0 — solid PC must have room to grow.
                         # ----------------------------------------------------------------
                         # BEZUGSQUELLE (gewählt): dokter-plexiglas.nl "Polycarbonaat Helder
                         # 6 mm" — massieve (compact) PC-Platte, glasklar, UV-Schutz
                         # BEIDSEITIG (vergilbt/versprödet nicht), ~93 % Licht, ~7,2 kg/m²
                         # (= Vollmaterial; eine 6-mm-Hohlkammerplatte wöge nur ~1,3 kg/m²).
-                        # 3 Platten ~783 x 1752 mm — GET A FRESH QUOTE for this cut size;
-                        # the earlier ~410 EUR (Stand 2026-06) was for the old 795 x 1832 mm
-                        # cut and no longer applies to the smaller as-built panels.
+                        # 3 Platten ~785 x 1759 mm — GET A FRESH QUOTE for this cut size;
+                        # the panels grew slightly with the final re-measurement (was
+                        # ~783 x 1752 mm for the 236.5 x 170.0 cm figure); the earlier
+                        # ~410 EUR (Stand 2026-06) quote was for the older 795 x 1832 mm
+                        # cut and no longer applies.
                         # (Beidseitig UV -> Einbaurichtung egal.)
                         # https://www.dokter-plexiglas.nl/polycarbonaat-helder-6mm
-    # Panelise the cover into equal panels ~this wide across x. 2365 / 800 rounds to
-    # 3 equal panels of ~788.3 mm; the 2 interior joints (x ~= 788.3 and 1576.7)
+    # Panelise the cover into equal panels ~this wide across x. 2370 / 800 rounds to
+    # 3 equal panels of exactly 790 mm; the 2 interior joints (x = 790 and 1580)
     # each land on a rafter (build.py places the rafters under the joints) and are
     # closed with the H-Profil below. This matches off-the-shelf 800-mm-wide sheet
     # widths (cut down slightly) so a joint never floats between supports. Remove
@@ -205,29 +213,35 @@ pergola:
       width: 40         # profile width across x at each side edge
       material: Aluminium
     # THERMAL EXPANSION (not a geometry change, a fitting detail): solid PC moves
-    # ~0.065 mm/m/K — about 4 mm across each ~788 mm panel and ~9 mm over the ~1.76 m
-    # slope length across a ~75 K summer/winter swing. The 3 x ~788.3 = 2365 here is
-    # the COLD nominal (= structure width); the play lives in the profiles, NOT the
-    # structure raster. That is why the cut spec above is ~783 x 1752 (~5 mm under
-    # the ~788.3 x 1756.7 nominal): the ~4 mm width / ~9 mm length growth then has
-    # room. Additionally: use oversized screw holes (+3-4 mm) with EPDM washers,
-    # centre each panel in its ~788 mm field (~2.5 mm clearance per side), don't push
-    # the panels fully home in the profile channels, and let the eave oversail freely
-    # into the gutter (front_overhang). The H-Profil still overlaps each ~783 mm
-    # panel edge by ~20 mm, so the joint stays clamped and weather-tight despite the
-    # gap.
-    tilt_deg: 5         # pitch: slopes DOWN toward the front, to shed rain/snow. 5 deg
-                        # is the practical MINIMUM for solid PVC/PC/acrylic panels
-                        # (manufacturers: >=5 deg ~ 9 %; 7-15 deg gives better self-
-                        # cleaning/drainage). Do NOT go below 5 deg with a solid panel:
-                        # standing water, dirt and leak risk. (Was 6 deg.)
+    # ~0.065 mm/m/K — about 3.9 mm across each 790 mm panel and ~8.6 mm over the
+    # ~1.764 m slope length across a ~75 K summer/winter swing. The 3 x 790 = 2370
+    # here is the COLD nominal (= structure width); the play lives in the profiles,
+    # NOT the structure raster. That is why the cut spec above is ~785 x 1759
+    # (~5 mm under the 790 x 1764 nominal): the ~3.9 mm width / ~8.6 mm length
+    # growth then has room. Additionally: use oversized screw holes (+3-4 mm) with
+    # EPDM washers, centre each panel in its 790 mm field (~2.5 mm clearance per
+    # side), don't push the panels fully home in the profile channels, and let the
+    # eave oversail freely into the gutter (front_overhang). The H-Profil still
+    # overlaps each ~785 mm panel edge by ~20 mm, so the joint stays clamped and
+    # weather-tight despite the gap.
+    tilt_deg: 3.85      # FINAL as-built pitch, derived from the on-site heights (see
+                        # clear_height above) — no longer a free design choice. This is
+                        # BELOW the manufacturer's practical minimum of ~5 deg (~9 %) for
+                        # solid PVC/PC/acrylic panels (7-15 deg is better for self-
+                        # cleaning/drainage); at ~3.85 deg (~6.7 %) expect more standing
+                        # water/dirt on the panels than originally planned for. Recorded
+                        # as-built rather than redesigned (confirmed with the site owner,
+                        # 2026-07-12) — keep an eye on drainage/cleaning in practice.
+                        # (Design value before construction was 5 deg, itself already
+                        # revised down once from an initial 6 deg.)
     gutter: true        # rain gutter along the low (front, house-away) eave
     front_overhang: 50  # the PC panels oversail the front beam by 5 cm so the drip
-                        # line falls INTO the gutter trough (trough y 405..525, the
-                        # panel front edge moves from y 525 to 475, ~centred over the
+                        # line falls INTO the gutter trough (trough y 475..595, the
+                        # panel front edge moves from y 595 to 545, ~centred over the
                         # trough) instead of on its rear lip. Lengthens each panel by
-                        # 50/cos5deg ~ 50 mm along the slope. Only the cover (panels +
-                        # H-/edge profiles) overhangs; the beams/rafters/gutter stay put.
+                        # 50/cos(tilt_deg) ~ 50 mm along the slope. Only the cover
+                        # (panels + H-/edge profiles) overhangs; the beams/rafters/gutter
+                        # stay put.
     # The fields below only apply to louvered/slatted roofs:
     slat:
       width: 80
@@ -279,18 +293,18 @@ surroundings:
     # board (so that bracket stays as-is) rather than tucking under the eave.
     # MEASURED on site 2026-06-22: top of the upper grey fascia board = 245 cm (the
     # `height` below); underside of that board = underside of the garden-house rain
-    # gutter = 222 cm. The lower grey board will be REMOVED, which frees the 10 cm
-    # the pergola roof was raised by: the pergola's highest point (~2320 mm at the
-    # house side) now passes the old 2220 mm gutter line and stops just under the
-    # upper board.
+    # gutter = 222 cm. The lower grey board will be REMOVED, which frees the space
+    # the pergola roof was raised by: the pergola's final as-built highest point
+    # (~2300 mm at the house side) now passes the old 2220 mm gutter line and stops
+    # just under the upper board.
     #
     # Length: the wall is only drawn as far as the pergola needs it. It ends 5 cm
-    # past the pergola's right edge (pergola right = x 2365, so wall right = 2415),
+    # past the pergola's right edge (pergola right = x 2370, so wall right = 2420),
     # but runs long to the LEFT (the steep-path side, x_min) where the beds and the
-    # ramp sit against it. Left edge -500, right edge 2415 -> width 2915.
+    # ramp sit against it. Left edge -500, right edge 2420 -> width 2920.
     - name: Hauswand
       at: [-500, 2600]  # min corner (x, y) — the roof's back edge stops 29.5 cm short of this
-      size: [2915, 30]  # (x, y) footprint: 30 mm board thickness, ends 5 cm past pergola
+      size: [2920, 30]  # (x, y) footprint: 30 mm board thickness, ends 5 cm past pergola
       height: 2450      # measured: top of the upper grey fascia board (245 cm)
       board_height: 190 # the wall is built of horizontal Blockbohlen (log boards) — draw
                         # them lightly as a wood texture: one faint horizontal course line
@@ -306,9 +320,10 @@ surroundings:
     # the UPPER board. Together they FLOAT at the roof edge from base z0 = 2220 (=
     # underside of the lower board / the gutter line, 222 cm) up to 2450 (measured top
     # of the upper board, 245 cm). The boundary between the two boards is the pergola's
-    # highest point (2320 mm): the lower board 2220 -> 2320, the upper board 2320 ->
-    # 2450 — so the pergola's top lands exactly at the board joint, just under the
-    # upper board, in the space the removed lower board used to occupy. In y both
+    # final as-built highest point (2300 mm): the lower board 2220 -> 2300, the upper
+    # board 2300 -> 2450 — so the pergola's top lands just under the upper board, a
+    # bit shy of the board joint (the pergola came in 2 cm lower than the earlier
+    # 2320 mm design figure). In y both
     # project from the wall front face (2600) out toward the pergola by 29.5 cm, so
     # their outer face (y = 2305) lands at the pergola's house-side roof edge / the
     # holding bracket. In x they run the same length as the wall. (Modelled level for
@@ -317,14 +332,14 @@ surroundings:
       kind: fascia      # grey eave board, drawn apart from the off-white Blockbohlen wall
       at: [-500, 2305]  # min corner (x, y): outer (pergola-side) face 29.5 cm off the wall
       z0: 2220          # base: underside of the lower board = gutter line (222 cm)
-      size: [2915, 295] # (x, y): runs the wall length; 29.5 cm deep back to the wall face
-      height: 100       # 2220 -> 2320: lower board (removed on site; drawn for reference)
+      size: [2920, 295] # (x, y): runs the wall length; 29.5 cm deep back to the wall face
+      height: 80        # 2220 -> 2300: lower board (removed on site; drawn for reference)
     - name: Fasziabrett (oben)
       kind: fascia
       at: [-500, 2305]
-      z0: 2320          # base: the board joint = pergola's highest point (232 cm)
-      size: [2915, 295]
-      height: 130       # 2320 -> 2450: upper board (stays; pergola butts up under it)
+      z0: 2300          # base: pergola's final as-built highest point (230.0 cm)
+      size: [2920, 295]
+      height: 150       # 2300 -> 2450: upper board (stays; pergola butts up under it)
 
   # A sloping path on the LEFT of the pergola, running along x. You walk down it
   # from the left: 1 m high at the far edge, tapering to ground level at the
