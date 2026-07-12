@@ -264,14 +264,11 @@ pergola:
     # Seitenweise Feinauswahl, WELCHE Ebenen wirklich eine Strebe bekommen:
     #   x_sides -> x-z-Ebenen: front (haus­abgewandt) / house (Hausseite)
     #   y_sides -> y-z-Ebenen: left / right
-    # Hier sind die quer über die FRONT laufenden x-Diagonalen bewusst weggelassen
-    # (offene Frontöffnung). Die Aussteifung übernehmen statt dessen: hausseitig
-    # die x-Streben, seitlich (links UND rechts, auch vorne) die y-Streben, und an
-    # der Wegseite (links) zusätzlich die Fußbefestigung der Pfosten an der kniehohen
-    # Betonsteinmauer. So bleibt der Rahmen gegen Schwanken gesichert, ohne dass
-    # Diagonalen die Frontöffnung verstellen.
-    x_sides: [house]       # x-Diagonalen NUR hausseitig (front bleibt frei)
-    y_sides: [left, right] # y-Streben auf beiden Seiten (sichern u.a. vordere Ecken)
+    # Auf der Baustelle wurden die Streben schlussendlich allseitig verbaut,
+    # also auch die x-Diagonalen quer über die FRONT (ursprünglich für eine
+    # offene Frontöffnung weggelassen).
+    x_sides: [house, front] # x-Diagonalen auf beiden Seiten (allseitig ausgesteift)
+    y_sides: [left, right]  # y-Streben auf beiden Seiten (sichern u.a. vordere Ecken)
 
   # Stoffgardinen an den beiden Seiten (links & rechts). Jede Seite bekommt eine
   # Gardinenstange, die zwischen ihren beiden Eckpfosten gespannt und an ihnen
