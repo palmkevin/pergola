@@ -54,6 +54,14 @@ pergola:
                         # Solving both together: tilt_deg = 3.85 deg, clear_height = 2193.9 mm.
                         # Recompute both whenever the as-built heights, footprint or
                         # roof.thickness change.
+                        # UPDATE 2026-07-15: roof cover switched to a purchased 10 mm
+                        # Hohlkammerplatte (was a 6 mm massiv/solid sheet) — see roof.thickness
+                        # below. clear_height/tilt_deg above are NOT re-derived for this: they
+                        # encode the physical as-built post/beam/rafter frame (already built on
+                        # site), which the panel choice doesn't change — only the panel itself
+                        # is 4 mm thicker, so the finished roof top will land ~4 mm higher than
+                        # the 230.0/218.5 cm figures above (~230.4/218.9 cm). Negligible, not
+                        # worth re-deriving.
   framing: flush        # "flush" = one-level roof: a perimeter beam ring with the
                         # rafters housed flush BETWEEN the front/back beams (tops
                         # aligned), so the roof is a single plane (no stacked layer).
@@ -163,38 +171,49 @@ pergola:
     direction: y        # rafters span along y (down the slope)
 
   roof:
-    kind: glass         # rigid translucent panel representation (here: a SOLID sheet)
-    thickness: 6        # massive Polycarbonat-Platte (solid PC sheet, 6 mm), glasklar.
-                        # A SOLID (compact) sheet, NOT a twin-wall/Hohlkammer panel — the
-                        # glass-like look we want, but tougher and UV-stabler than solid
-                        # PVC (which DIY stores don't stock flat/clear anyway). 6 mm spans
-                        # the ~740 mm rafter field with ease (solid sheets allow ~900 mm).
-    material: Polycarbonat (massiv)   # cover material, shown in the Materialliste.
+    kind: glass         # rigid translucent panel representation (here: a twin-wall sheet)
+    thickness: 10       # HohlkammerPlatte PC (twin-wall/multiwall polycarbonate), klar,
+                        # 10 mm — BOUGHT 2026-07-15 (Baumarkt Art. 2810248, EAN
+                        # 4003412012247, 71,37 EUR / 200x105 cm sheet = 33,99 EUR/m²).
+                        # Replaces the earlier 6 mm massiv/solid-sheet plan (see the
+                        # dokter-plexiglas sourcing below the old plan used, kept here for
+                        # reference only). 10 mm twin-wall's typical allowable support
+                        # spacing (manufacturer-dependent, ~700-1000 mm) comfortably covers
+                        # the ~740-790 mm rafter field — a 4,5 mm twin-wall sheet (also
+                        # seen/priced in-store) was rejected as too thin for this span.
+                        # A twin-wall sheet is NOT the same as a solid/massiv sheet: it has
+                        # internal ribs (Stege) running lengthwise, which MUST run
+                        # down-slope (parallel to y, i.e. along the sheet's 2000 mm side —
+                        # matches roof.rafters direction: y here) so rain drains out the low
+                        # (front) edge instead of pooling inside the chambers.
+    material: Polycarbonat (Hohlkammer, 10 mm)   # cover material, shown in the Materialliste.
                         # NOMINAL panel size (= structure raster, the COLD reference):
-                        # 790.0 (x) x ~1764.0 (slope length) x 6 mm, following the final
+                        # 790.0 (x) x ~1764.0 (slope length) x 10 mm, following the final
                         # as-built 237.0 x 171.0 cm footprint and 3.85 deg as-built pitch.
                         # The ~1764.0 is the slope length: 1710 mm horizontal roof depth +
                         # 50 mm front overhang (front_overhang below) -> 1760 mm
                         # horizontal, / cos 3.85 deg.
                         # ----------------------------------------------------------------
-                        # ORDER / CUT spec (what to actually buy): 3 x glasklare 6 mm
-                        # PC-Massivplatte, each cut ~5 mm UNDER nominal -> ~785 x 1759 mm
-                        # (Bauhaus Zuschnitt or a plastics cut-to-size shop). The 5 mm is
-                        # the thermal expansion gap (see THERMAL EXPANSION below); the
-                        # H-/edge profiles (50/40 mm wide) cover the resulting fuge. Do
-                        # NOT cut a tight 790.0/1764.0 — solid PC must have room to grow.
-                        # ----------------------------------------------------------------
-                        # BEZUGSQUELLE (gewählt): dokter-plexiglas.nl "Polycarbonaat Helder
-                        # 6 mm" — massieve (compact) PC-Platte, glasklar, UV-Schutz
-                        # BEIDSEITIG (vergilbt/versprödet nicht), ~93 % Licht, ~7,2 kg/m²
-                        # (= Vollmaterial; eine 6-mm-Hohlkammerplatte wöge nur ~1,3 kg/m²).
-                        # 3 Platten ~785 x 1759 mm — GET A FRESH QUOTE for this cut size;
-                        # the panels grew slightly with the final re-measurement (was
-                        # ~783 x 1752 mm for the 236.5 x 170.0 cm figure); the earlier
-                        # ~410 EUR (Stand 2026-06) quote was for the older 795 x 1832 mm
-                        # cut and no longer applies.
-                        # (Beidseitig UV -> Einbaurichtung egal.)
-                        # https://www.dokter-plexiglas.nl/polycarbonaat-helder-6mm
+                        # CUT spec (what was bought): 3 x HohlkammerPlatte PC klar 10 mm,
+                        # 2000 x 1050 mm sheets as sold — trim each down to ~785 x 1759 mm
+                        # (5 mm under nominal, the thermal-expansion gap, see THERMAL
+                        # EXPANSION below; the H-/edge profiles cover the resulting fuge).
+                        # Orient the 2000 mm side along the slope (> 1759 mm needed, with
+                        # margin) and the 1050 mm side across x (> 790 mm needed, ~260 mm
+                        # offcut) so the internal ribs keep running down-slope — do NOT
+                        # rotate 90 deg even though it would waste less material, that would
+                        # put the ribs across the slope and trap water inside them. 3 sheets
+                        # x 71,37 EUR = 214,11 EUR total (vs. the ~410 EUR quoted for the
+                        # massiv alternative).
+                        # UV-Schutz: not stated on the shelf label (unlike the massiv sheet
+                        # originally planned, which had UV coating on both faces) — check the
+                        # manufacturer datasheet/protective film before installing; twin-wall
+                        # sheets often carry UV coextrusion on ONE face only, which then MUST
+                        # face outward/up, and any protective film usually marks which side.
+                        # FIXING: unlike a solid sheet, screws must land ON the internal ribs
+                        # (not mid-chamber) with oversized holes + EPDM sealing washers/caps —
+                        # check the rib spacing on the actual sheet when laying out fixings
+                        # through the edge/H-profiles.
     # Panelise the cover into equal panels ~this wide across x. 2370 / 800 rounds to
     # 3 equal panels of exactly 790 mm; the 2 interior joints (x = 790 and 1580)
     # each land on a rafter (build.py places the rafters under the joints) and are
@@ -204,15 +223,19 @@ pergola:
     panel_width: 800
     join_profile:       # connecting H-Profil over each interior panel joint
       width: 50         # profile width across x (straddles the joint, screwed to the rafter)
-      material: Aluminium   # alu glazing bar (standard for solid sheets; could be PVC)
+      material: Aluminium   # alu glazing bar (standard; could be PVC)
     edge_profile:       # closure profile along the two SIDE edges (left/right), clamping
                         # each outer panel edge onto the side beam. The front edge drains
                         # into the gutter and the house edge is a wall flashing, so only
-                        # the two longitudinal sides get one. (Solid sheets need NO open-
-                        # chamber U-profiles — there are no chambers, unlike Hohlkammer.)
+                        # the two longitudinal sides get one. Now that the cover is a
+                        # twin-wall (Hohlkammer) sheet, the chamber ENDS at these two side
+                        # edges are open — cap them (breathable insect-proof tape at the
+                        # low/front end so condensation can still weep out, solid closure
+                        # tape at the high/house end) before clamping the edge profile on,
+                        # or dirt/insects will collect in the open chambers.
       width: 40         # profile width across x at each side edge
       material: Aluminium
-    # THERMAL EXPANSION (not a geometry change, a fitting detail): solid PC moves
+    # THERMAL EXPANSION (not a geometry change, a fitting detail): PC moves
     # ~0.065 mm/m/K — about 3.9 mm across each 790 mm panel and ~8.6 mm over the
     # ~1.764 m slope length across a ~75 K summer/winter swing. The 3 x 790 = 2370
     # here is the COLD nominal (= structure width); the play lives in the profiles,
@@ -227,11 +250,15 @@ pergola:
     tilt_deg: 3.85      # FINAL as-built pitch, derived from the on-site heights (see
                         # clear_height above) — no longer a free design choice. This is
                         # BELOW the manufacturer's practical minimum of ~5 deg (~9 %) for
-                        # solid PVC/PC/acrylic panels (7-15 deg is better for self-
-                        # cleaning/drainage); at ~3.85 deg (~6.7 %) expect more standing
-                        # water/dirt on the panels than originally planned for. Recorded
-                        # as-built rather than redesigned (confirmed with the site owner,
-                        # 2026-07-12) — keep an eye on drainage/cleaning in practice.
+                        # solid/twin-wall PVC/PC/acrylic panels alike (7-15 deg is better
+                        # for self-cleaning/drainage); at ~3.85 deg (~6.7 %) expect more
+                        # standing water/dirt on the panels than originally planned for —
+                        # and worse on the twin-wall sheet now used than it would have been
+                        # on the original solid-sheet plan, since dirt/algae can also creep
+                        # into the open chamber ends if they aren't capped well (see
+                        # edge_profile above). Recorded as-built rather than redesigned
+                        # (confirmed with the site owner, 2026-07-12) — keep an eye on
+                        # drainage/cleaning in practice.
                         # (Design value before construction was 5 deg, itself already
                         # revised down once from an initial 6 deg.)
     gutter: true        # rain gutter along the low (front, house-away) eave
